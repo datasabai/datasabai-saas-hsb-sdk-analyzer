@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.datasabai.services</groupId>
+        <artifactId>file-schema-analyzer-service</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>analyzer-sdk-adapter</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Analyzer SDK Adapter</name>
+    <description>
+        Pure Java adapter for integrating File Schema Analyzer with Datasabai HSB SDK.
+        NO FRAMEWORK DEPENDENCIES - Pure Java SE only.
+    </description>
+
+    <dependencies>
+        <!-- SDK Core - REQUIRED -->
+        <dependency>
+            <groupId>com.datasabai.hsb</groupId>
+            <artifactId>sdk-core</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- Analyzer Core - REQUIRED -->
+        <dependency>
+            <groupId>com.datasabai.services</groupId>
+            <artifactId>analyzer-core</artifactId>
+        </dependency>
+
+        <!-- Testing ONLY -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
