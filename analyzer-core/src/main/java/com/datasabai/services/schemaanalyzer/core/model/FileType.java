@@ -12,43 +12,36 @@ import java.util.List;
  *
  * <h3>Current Implementation Status:</h3>
  * <ul>
- *   <li>XML - Fully implemented</li>
- *   <li>EXCEL - Architecture ready, stub implementation</li>
- *   <li>CSV - Architecture ready, stub implementation</li>
- *   <li>TXT - Architecture ready, stub implementation</li>
- *   <li>JSON - Architecture ready, stub implementation</li>
+ *   <li>CSV - Fully implemented with OpenCSV</li>
+ *   <li>JSON - Fully implemented with Jackson</li>
+ *   <li>FIXED_LENGTH - Fully implemented with structure descriptor support</li>
+ *   <li>VARIABLE_LENGTH - Fully implemented with delimiter and tag-value parsing</li>
  * </ul>
  */
 public enum FileType {
     /**
-     * XML files (.xml)
-     * <p>Status: IMPLEMENTED</p>
-     */
-    XML("xml", "application/xml", List.of("xml")),
-
-    /**
-     * Excel files (.xls, .xlsx)
-     * <p>Status: STUB - Not yet implemented</p>
-     */
-    EXCEL("excel", "application/vnd.ms-excel", List.of("xls", "xlsx")),
-
-    /**
      * CSV files (.csv)
-     * <p>Status: STUB - Not yet implemented</p>
+     * <p>Status: IMPLEMENTED - Uses OpenCSV for parsing</p>
      */
     CSV("csv", "text/csv", List.of("csv")),
 
     /**
-     * Text files (.txt)
-     * <p>Status: STUB - Not yet implemented</p>
+     * JSON files (.json)
+     * <p>Status: IMPLEMENTED - Uses Jackson for parsing</p>
      */
-    TXT("txt", "text/plain", List.of("txt")),
+    JSON("json", "application/json", List.of("json")),
 
     /**
-     * JSON files (.json)
-     * <p>Status: STUB - Not yet implemented</p>
+     * Fixed-length files (.txt, .dat, .fix)
+     * <p>Status: IMPLEMENTED - Requires field position descriptor</p>
      */
-    JSON("json", "application/json", List.of("json"));
+    FIXED_LENGTH("fixed-length", "text/plain", List.of("txt", "dat", "fix")),
+
+    /**
+     * Variable-length files (.txt, .dat, .var)
+     * <p>Status: IMPLEMENTED - Supports delimited fields and tag-value pairs</p>
+     */
+    VARIABLE_LENGTH("variable-length", "text/plain", List.of("txt", "dat", "var"));
 
     private final String code;
     private final String mimeType;
@@ -63,7 +56,7 @@ public enum FileType {
     /**
      * Gets the technical code for this file type.
      *
-     * @return lowercase code (e.g., "xml", "excel")
+     * @return lowercase code (e.g., "csv", "json", "fixed-length")
      */
     public String getCode() {
         return code;
@@ -72,7 +65,7 @@ public enum FileType {
     /**
      * Gets the MIME type for this file type.
      *
-     * @return MIME type (e.g., "application/xml")
+     * @return MIME type (e.g., "text/csv", "application/json")
      */
     public String getMimeType() {
         return mimeType;
@@ -81,7 +74,7 @@ public enum FileType {
     /**
      * Gets the list of file extensions supported by this file type.
      *
-     * @return list of extensions without the dot (e.g., ["xml"])
+     * @return list of extensions without the dot (e.g., ["csv"], ["json"])
      */
     public List<String> getExtensions() {
         return extensions;
@@ -90,7 +83,7 @@ public enum FileType {
     /**
      * Finds a FileType by its file extension.
      *
-     * @param extension file extension without the dot (e.g., "xml", "xlsx")
+     * @param extension file extension without the dot (e.g., "csv", "json", "txt")
      * @return matching FileType
      * @throws IllegalArgumentException if no matching FileType is found
      */
@@ -119,7 +112,7 @@ public enum FileType {
     /**
      * Finds a FileType by its MIME type.
      *
-     * @param mimeType MIME type (e.g., "application/xml")
+     * @param mimeType MIME type (e.g., "text/csv", "application/json")
      * @return matching FileType
      * @throws IllegalArgumentException if no matching FileType is found
      */
@@ -134,13 +127,6 @@ public enum FileType {
             if (type.mimeType.equalsIgnoreCase(normalizedMimeType)) {
                 return type;
             }
-        }
-
-        // Handle common Excel MIME types
-        if (normalizedMimeType.contains("spreadsheet") ||
-            normalizedMimeType.contains("excel") ||
-            normalizedMimeType.equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) {
-            return EXCEL;
         }
 
         throw new IllegalArgumentException(

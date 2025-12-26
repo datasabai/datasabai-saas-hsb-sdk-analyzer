@@ -1,12 +1,13 @@
+com/datasabai/services/schemaanalyzer/core/model/FixedLengthDescriptor.class
 com/datasabai/services/schemaanalyzer/core/model/SchemaMetadata.class
-com/datasabai/services/schemaanalyzer/core/parser/XmlFileParser.class
 com/datasabai/services/schemaanalyzer/core/parser/CsvFileParser.class
 com/datasabai/services/schemaanalyzer/core/parser/FileParser.class
-com/datasabai/services/schemaanalyzer/core/parser/ExcelFileParser.class
 com/datasabai/services/schemaanalyzer/core/generator/SchemaOptimizer$1.class
 com/datasabai/services/schemaanalyzer/core/model/SchemaGenerationResult.class
+com/datasabai/services/schemaanalyzer/core/parser/FixedLengthFileParser.class
 com/datasabai/services/schemaanalyzer/core/model/FileType.class
 com/datasabai/services/schemaanalyzer/core/model/SchemaMetadata$Builder.class
+com/datasabai/services/schemaanalyzer/core/parser/VariableLengthFileParser.class
 com/datasabai/services/schemaanalyzer/core/model/FileAnalysisRequest.class
 com/datasabai/services/schemaanalyzer/core/generator/JsonSchemaGenerator.class
 com/datasabai/services/schemaanalyzer/core/generator/SchemaOptimizer.class
@@ -15,6 +16,9 @@ com/datasabai/services/schemaanalyzer/core/model/FileAnalysisRequest$Builder.cla
 com/datasabai/services/schemaanalyzer/core/model/AnalyzerException.class
 com/datasabai/services/schemaanalyzer/core/FileSchemaAnalyzer.class
 com/datasabai/services/schemaanalyzer/core/parser/ParserFactory.class
+com/datasabai/services/schemaanalyzer/core/parser/TypeInferenceUtil.class
 com/datasabai/services/schemaanalyzer/core/model/StructureElement$Builder.class
+com/datasabai/services/schemaanalyzer/core/model/FixedLengthDescriptor$FieldDefinition.class
 com/datasabai/services/schemaanalyzer/core/model/StructureElement.class
+com/datasabai/services/schemaanalyzer/core/parser/JsonFileParser.class
 com/datasabai/services/schemaanalyzer/core/model/ElementAttribute.class

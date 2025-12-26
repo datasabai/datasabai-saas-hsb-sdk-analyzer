@@ -1,1 +1,5 @@
-com/datasabai/services/schemaanalyzer/core/FileSchemaAnalyzerTest.class
+com/datasabai/services/schemaanalyzer/core/parser/TypeInferenceUtilTest.class
+com/datasabai/services/schemaanalyzer/core/parser/FixedLengthFileParserTest.class
+com/datasabai/services/schemaanalyzer/core/parser/CsvFileParserTest.class
+com/datasabai/services/schemaanalyzer/core/parser/JsonFileParserTest.class
+com/datasabai/services/schemaanalyzer/core/parser/VariableLengthFileParserTest.class

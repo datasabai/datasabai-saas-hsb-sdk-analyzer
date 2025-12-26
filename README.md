@@ -1,33 +1,32 @@
 # File Schema Analyzer Service
 
-Service d'analyse de fichiers multiples types et génération de JSON Schemas pour BeanIO.
+A multi-format file analysis service that generates JSON Schemas for BeanIO configuration from CSV, JSON, Fixed-Length, and Variable-Length files.
 
-## 🏗️ Architecture Extensible
+## Architecture Overview
 
-Ce service utilise le **Strategy Pattern** pour supporter différents types de fichiers de manière extensible :
+This service uses the **Strategy Pattern** to support different file types in an extensible manner:
 
 ```
 FileSchemaAnalyzer
        ↓
  ParserFactory
        ↓
-┌──────┴──────┬────────┬────────┬────────┐
-│             │        │        │        │
-XML         Excel     CSV      TXT     JSON
-(✅)        (🔜)      (🔜)     (🔜)    (🔜)
+┌──────┴──────┬────────┬───────────────┬────────────────┐
+│             │        │               │                │
+CSV         JSON    Fixed-Length  Variable-Length
+(✅)        (✅)       (✅)              (✅)
 ```
 
-### Statut d'Implémentation
+### Implementation Status
 
-| Type de Fichier | Statut | Parser | Description |
-|-----------------|--------|--------|-------------|
-| **XML** | ✅ Implémenté | `XmlFileParser` | Parse complet avec namespaces, attributs, arrays |
-| **Excel** | 🔜 Stub | `ExcelFileParser` | Architecture prête, à implémenter |
-| **CSV** | 🔜 Stub | `CsvFileParser` | Architecture prête, à implémenter |
-| **TXT** | 🔜 Stub | - | À créer |
-| **JSON** | 🔜 Stub | - | À créer |
+| File Type | Status | Parser | Description |
+|-----------|--------|--------|-------------|
+| **CSV** | ✅ Implemented | `CsvFileParser` | Delimited parsing with OpenCSV, header detection, type inference |
+| **JSON** | ✅ Implemented | `JsonFileParser` | Recursive JSON parsing with Jackson, nested objects/arrays |
+| **Fixed-Length** | ✅ Implemented | `FixedLengthFileParser` | Position-based parsing with external/inline descriptors |
+| **Variable-Length** | ✅ Implemented | `VariableLengthFileParser` | Dual-mode: delimited fields or tag-value pairs |
 
-## 📦 Structure du Projet
+## Project Structure
 
 ```
 datasabai-saas-hsb-sdk-analyzer/
@@ -36,36 +35,39 @@ datasabai-saas-hsb-sdk-analyzer/
 ├── analyzer-core/                   (⚠️ Pure Java - NO Frameworks)
 │   ├── pom.xml
 │   └── src/main/java/...
-│       ├── model/                   (Modèles communs)
-│       │   ├── FileType.java        (Enum: XML, EXCEL, CSV, etc.)
+│       ├── model/                   (Common models)
+│       │   ├── FileType.java        (Enum: CSV, JSON, FIXED_LENGTH, VARIABLE_LENGTH)
 │       │   ├── FileAnalysisRequest.java
 │       │   ├── SchemaGenerationResult.java
-│       │   ├── StructureElement.java (Élément générique)
+│       │   ├── StructureElement.java (Generic element)
+│       │   ├── FixedLengthDescriptor.java
 │       │   └── ...
 │       │
 │       ├── parser/                  (Strategy Pattern)
-│       │   ├── FileParser.java      (Interface générique)
-│       │   ├── XmlFileParser.java   (✅ IMPLEMENTED)
-│       │   ├── ExcelFileParser.java (🔜 STUB)
-│       │   ├── CsvFileParser.java   (🔜 STUB)
+│       │   ├── FileParser.java      (Generic interface)
+│       │   ├── CsvFileParser.java   (✅ IMPLEMENTED)
+│       │   ├── JsonFileParser.java  (✅ IMPLEMENTED)
+│       │   ├── FixedLengthFileParser.java (✅ IMPLEMENTED)
+│       │   ├── VariableLengthFileParser.java (✅ IMPLEMENTED)
+│       │   ├── TypeInferenceUtil.java (Shared type inference)
 │       │   └── ParserFactory.java   (Factory)
 │       │
 │       ├── generator/
 │       │   ├── JsonSchemaGenerator.java
 │       │   └── SchemaOptimizer.java
 │       │
-│       └── FileSchemaAnalyzer.java  (Service principal)
+│       └── FileSchemaAnalyzer.java  (Main service)
 │
-├── analyzer-quarkus-app/            (Application de développement)
+├── analyzer-quarkus-app/            (Development application)
 │   └── src/main/java/...
 │       └── AnalyzerResource.java    (REST endpoints)
 │
 └── analyzer-sdk-adapter/            (⚠️ Pure Java - NO Annotations)
     └── src/main/java/...
-        └── FileSchemaAnalyzerAdapter.java (Implémente SdkModule)
+        └── FileSchemaAnalyzerAdapter.java (Implements SdkModule)
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Build
 
@@ -81,72 +83,89 @@ cd analyzer-quarkus-app
 mvn quarkus:dev
 ```
 
-L'application démarre sur [http://localhost:8080](http://localhost:8080)
+The application starts on [http://localhost:8080](http://localhost:8080)
 
-### 3. Tester avec XML
+### 3. Test with CSV
 
 ```bash
 curl -X POST http://localhost:8080/api/analyzer/analyze \
   -H "Content-Type: application/json" \
   -d '{
-    "fileType": "XML",
-    "fileContent": "<customer><id>123</id><name>John Doe</name></customer>",
-    "schemaName": "Customer",
+    "fileType": "CSV",
+    "fileContent": "ID,Name,Price\n1,Product A,19.99\n2,Product B,29.99",
+    "schemaName": "Product",
     "detectArrays": true,
     "optimizeForBeanIO": true
   }'
 ```
 
-### 4. Vérifier les Types Supportés
-
-```bash
-curl http://localhost:8080/api/analyzer/supported-types
-```
-
-**Réponse :**
-```json
-{
-  "available": ["XML"],
-  "registered": ["XML", "EXCEL", "CSV"],
-  "availableCount": 1,
-  "registeredCount": 3
-}
-```
-
-### 5. Essayer Excel ou CSV (retournera une erreur explicite)
+### 4. Test with JSON
 
 ```bash
 curl -X POST http://localhost:8080/api/analyzer/analyze \
   -H "Content-Type: application/json" \
   -d '{
-    "fileType": "EXCEL",
-    "fileBytes": "...",
-    "schemaName": "ExcelData"
+    "fileType": "JSON",
+    "fileContent": "{\"id\": 123, \"name\": \"John Doe\", \"price\": 19.99}",
+    "schemaName": "Product"
   }'
 ```
 
-**Réponse (HTTP 501):**
+### 5. Test with Fixed-Length
+
+```bash
+curl -X POST http://localhost:8080/api/analyzer/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fileType": "FIXED_LENGTH",
+    "fileContent": "00001Product A     00019.99\n00002Product B     00029.99",
+    "schemaName": "Product",
+    "parserOptions": {
+      "fieldDefinitions": "[{\"name\":\"id\",\"start\":0,\"length\":5},{\"name\":\"name\",\"start\":5,\"length\":15},{\"name\":\"price\",\"start\":20,\"length\":8}]"
+    }
+  }'
+```
+
+### 6. Test with Variable-Length
+
+```bash
+curl -X POST http://localhost:8080/api/analyzer/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fileType": "VARIABLE_LENGTH",
+    "fileContent": "001|Product A|19.99\n002|Product B|29.99",
+    "schemaName": "Product"
+  }'
+```
+
+### 7. Check Supported Types
+
+```bash
+curl http://localhost:8080/api/analyzer/supported-types
+```
+
+**Response:**
 ```json
 {
-  "error": "UNSUPPORTED_FILE_TYPE",
-  "message": "Excel parsing not yet implemented. To add Excel support: ...",
-  "fileType": "EXCEL",
-  "availableTypes": ["XML"]
+  "available": ["CSV", "JSON", "FIXED_LENGTH", "VARIABLE_LENGTH"],
+  "registered": ["CSV", "JSON", "FIXED_LENGTH", "VARIABLE_LENGTH"],
+  "availableCount": 4,
+  "registeredCount": 4
 }
 ```
 
-## 📚 Endpoints REST
+## REST Endpoints
 
-| Endpoint | Méthode | Description |
-|----------|---------|-------------|
-| `/api/analyzer/analyze` | POST | Analyse depuis JSON |
-| `/api/analyzer/analyze-file` | POST | Upload multipart |
-| `/api/analyzer/supported-types` | GET | Types disponibles |
-| `/api/analyzer/parser-options/{type}` | GET | Options par type |
-| `/api/analyzer/validate-schema` | POST | Valide un JSON Schema |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/analyzer/analyze` | POST | Analyze from JSON |
+| `/api/analyzer/analyze-file` | POST | Multipart upload |
+| `/api/analyzer/supported-types` | GET | Available types |
+| `/api/analyzer/parser-options/{type}` | GET | Options per type |
+| `/api/analyzer/validate-schema` | POST | Validate JSON Schema |
 | `/api/analyzer/health` | GET | Health check |
 
-## 🔧 Utilisation Programmatique
+## Programmatic Usage
 
 ### Via Analyzer Core (Pure Java)
 
@@ -156,201 +175,190 @@ import com.datasabai.services.schemaanalyzer.core.model.*;
 
 FileSchemaAnalyzer analyzer = new FileSchemaAnalyzer();
 
-FileAnalysisRequest request = FileAnalysisRequest.builder()
-    .fileType(FileType.XML)
-    .fileContent("<customer><id>123</id></customer>")
-    .schemaName("Customer")
+// CSV Example
+FileAnalysisRequest csvRequest = FileAnalysisRequest.builder()
+    .fileType(FileType.CSV)
+    .fileContent("ID,Name,Price\n1,Product A,19.99\n2,Product B,29.99")
+    .schemaName("Product")
+    .parserOption("delimiter", ",")
+    .parserOption("hasHeader", "true")
     .detectArrays(true)
     .optimizeForBeanIO(true)
     .build();
 
-SchemaGenerationResult result = analyzer.analyze(request);
+SchemaGenerationResult result = analyzer.analyze(csvRequest);
 
 if (result.isSuccess()) {
     System.out.println(result.getJsonSchemaAsString());
 }
+
+// JSON Example
+FileAnalysisRequest jsonRequest = FileAnalysisRequest.builder()
+    .fileType(FileType.JSON)
+    .fileContent("{\"id\": 123, \"name\": \"Product A\", \"price\": 19.99}")
+    .schemaName("Product")
+    .build();
+
+result = analyzer.analyze(jsonRequest);
 ```
 
-### Via SDK Adapter (Intégration HSB)
+### Via SDK Adapter (HSB Integration)
 
 ```java
 import com.datasabai.services.schemaanalyzer.adapter.*;
-import com.datasabai.hsb.sdk.*;
+import com.datasabai.hsb.sdk.core.*;
 
 SdkModule<FileAnalysisRequest, SchemaGenerationResult> module =
     new FileSchemaAnalyzerAdapter();
 
 FileAnalysisRequest request = FileAnalysisRequest.builder()
-    .fileType(FileType.XML)
-    .fileContent("<data>...</data>")
-    .schemaName("Data")
+    .fileType(FileType.JSON)
+    .fileContent("{\"id\": 123, \"name\": \"Product A\"}")
+    .schemaName("Product")
     .build();
 
-SdkContext context = new SdkContext();
-context.setConfig("optimizeForBeanIO", "true");
+SdkContext context = SdkContext.builder()
+    .config("optimizeForBeanIO", "true")
+    .config("detectArrays", "true")
+    .build();
 
 SchemaGenerationResult result = module.execute(request, context);
 ```
 
-## 🛠️ Ajouter un Nouveau Type de Fichier
+## Parser Options
 
-### Exemple : Implémenter le Parser CSV
-
-#### Étape 1 : Décommenter la Dépendance
-
-Dans `analyzer-core/pom.xml` :
-
-```xml
-<!-- Décommenter -->
-<dependency>
-    <groupId>org.apache.commons</groupId>
-    <artifactId>commons-csv</artifactId>
-</dependency>
-```
-
-#### Étape 2 : Implémenter `CsvFileParser`
-
-Actuellement dans [analyzer-core/src/main/java/com/datasabai/services/schemaanalyzer/core/parser/CsvFileParser.java](analyzer-core/src/main/java/com/datasabai/services/schemaanalyzer/core/parser/CsvFileParser.java):
-
-```java
-@Override
-public StructureElement parse(FileAnalysisRequest request) throws AnalyzerException {
-    // TODO: Implementation template provided in comments
-
-    // 1. Get parser options
-    String delimiter = request.getParserOption("delimiter", ",");
-    boolean hasHeader = Boolean.parseBoolean(request.getParserOption("hasHeader", "true"));
-
-    // 2. Configure CSV format
-    CSVFormat format = CSVFormat.DEFAULT
-            .withDelimiter(delimiter.charAt(0))
-            .withFirstRecordAsHeader(hasHeader);
-
-    // 3. Parse CSV
-    Reader reader = new StringReader(request.getFileContent());
-    CSVParser csvParser = new CSVParser(reader, format);
-
-    // 4. Build StructureElement tree
-    StructureElement root = new StructureElement();
-    root.setName(request.getSchemaName());
-    root.setType("object");
-
-    // 5. Analyze columns and infer types
-    // ... voir template dans le code
-
-    return root;
-}
-```
-
-#### Étape 3 : Implémenter `mergeStructures`
-
-```java
-@Override
-public StructureElement mergeStructures(List<StructureElement> structures) {
-    // Merge multiple CSV structures
-    // Combine columns, refine types, mark optional columns
-}
-```
-
-#### Étape 4 : Tester
-
-```java
-@Test
-void shouldParseCsvFile() {
-    String csvContent = """
-        id,name,price
-        1,Product A,19.99
-        2,Product B,29.99
-        """;
-
-    FileAnalysisRequest request = FileAnalysisRequest.builder()
-        .fileType(FileType.CSV)
-        .fileContent(csvContent)
-        .schemaName("Products")
-        .parserOption("delimiter", ",")
-        .parserOption("hasHeader", "true")
-        .build();
-
-    FileSchemaAnalyzer analyzer = new FileSchemaAnalyzer();
-    SchemaGenerationResult result = analyzer.analyze(request);
-
-    assertThat(result.isSuccess()).isTrue();
-}
-```
-
-#### Étape 5 : Vérification
-
-```bash
-# Rebuild
-mvn clean install
-
-# Test
-curl -X POST http://localhost:8080/api/analyzer/analyze \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fileType": "CSV",
-    "fileContent": "id,name,price\n1,Product A,19.99",
-    "schemaName": "Products"
-  }'
-```
-
-**C'est tout !** Le `ParserFactory` l'enregistre automatiquement.
-
-## 🎯 Fonctionnalités Avancées
-
-### Détection Automatique d'Arrays
-
-```xml
-<!-- Input XML -->
-<orders>
-    <order><id>1</id></order>
-    <order><id>2</id></order>
-</orders>
-```
+### CSV Parser Options
 
 ```java
 FileAnalysisRequest request = FileAnalysisRequest.builder()
-    .detectArrays(true)  // ← Active la détection
+    .fileType(FileType.CSV)
+    .parserOption("delimiter", ",")           // Column delimiter (default: ",")
+    .parserOption("hasHeader", "true")        // First row is header (default: "true")
+    .parserOption("encoding", "UTF-8")        // File encoding (default: "UTF-8")
+    .parserOption("quoteChar", "\"")          // Quote character (default: "\"")
+    .parserOption("escapeChar", "\\")         // Escape character (default: "\\")
+    .parserOption("skipLines", "0")           // Lines to skip (default: "0")
+    .parserOption("sampleRows", "100")        // Rows to sample (default: "100")
     .build();
-
-result.getDetectedArrayFields();  // ["orders.order"]
 ```
 
-### Fusion de Samples
+### JSON Parser Options
 
 ```java
 FileAnalysisRequest request = FileAnalysisRequest.builder()
-    .fileContent(mainXml)
-    .addSampleFile(sample1)
-    .addSampleFile(sample2)
+    .fileType(FileType.JSON)
+    .parserOption("strictMode", "true")       // Strict JSON validation (default: "true")
+    .parserOption("allowComments", "false")   // Allow // and /* */ comments (default: "false")
+    .parserOption("allowTrailingCommas", "false") // Allow trailing commas (default: "false")
     .build();
-
-// Le schema généré inclut tous les champs trouvés
-// Les champs optionnels sont marqués comme tels
 ```
 
-### Optimisation BeanIO
+### Fixed-Length Parser Options
+
+```java
+// Option 1: Inline field definitions
+String fieldDefs = "[" +
+    "{\"name\":\"id\",\"start\":0,\"length\":5,\"type\":\"integer\"}," +
+    "{\"name\":\"name\",\"start\":5,\"length\":20,\"type\":\"string\"}," +
+    "{\"name\":\"price\",\"start\":25,\"length\":10,\"type\":\"number\"}" +
+    "]";
+
+FileAnalysisRequest request = FileAnalysisRequest.builder()
+    .fileType(FileType.FIXED_LENGTH)
+    .parserOption("fieldDefinitions", fieldDefs)  // Inline JSON definitions
+    .parserOption("encoding", "UTF-8")            // File encoding (default: "UTF-8")
+    .parserOption("skipLines", "0")               // Lines to skip (default: "0")
+    .parserOption("trimFields", "true")           // Trim whitespace (default: "true")
+    .parserOption("recordLength", "35")           // Expected record length (optional)
+    .build();
+
+// Option 2: External descriptor file
+FileAnalysisRequest request2 = FileAnalysisRequest.builder()
+    .fileType(FileType.FIXED_LENGTH)
+    .parserOption("descriptorFile", descriptorJsonContent)  // External descriptor
+    .build();
+```
+
+### Variable-Length Parser Options
+
+```java
+// Mode A: Delimited Fields
+FileAnalysisRequest request = FileAnalysisRequest.builder()
+    .fileType(FileType.VARIABLE_LENGTH)
+    .parserOption("delimiter", "|")           // Field delimiter (default: "|")
+    .parserOption("hasHeader", "false")       // First row is header (default: "false")
+    .parserOption("encoding", "UTF-8")        // File encoding (default: "UTF-8")
+    .parserOption("skipLines", "0")           // Lines to skip (default: "0")
+    .parserOption("quoteChar", "\"")          // Quote character (default: "\"")
+    .build();
+
+// Mode B: Tag-Value Pairs (ID=001|NAME=Product A|PRICE=19.99)
+FileAnalysisRequest request2 = FileAnalysisRequest.builder()
+    .fileType(FileType.VARIABLE_LENGTH)
+    .parserOption("tagValuePairs", "true")    // Enable tag-value mode (default: "false")
+    .parserOption("tagValueDelimiter", "=")   // Tag-value delimiter (default: "=")
+    .parserOption("delimiter", "|")           // Pair delimiter (default: "|")
+    .build();
+```
+
+## Type Inference
+
+All parsers use a shared type inference utility (`TypeInferenceUtil`) that detects:
+
+- **integer**: Whole numbers (e.g., "123", "-456")
+- **number**: Decimals (e.g., "19.99", "3.14")
+- **boolean**: true/false values (case-insensitive)
+- **string**: Default fallback type
+
+Type inference is applied to:
+- CSV columns
+- JSON string values
+- Fixed-length fields (when type not specified in descriptor)
+- Variable-length fields
+
+Type merging rules when analyzing multiple samples:
+- integer + integer → integer
+- integer + number → number
+- any + string → string
+- null + type → type
+
+## Advanced Features
+
+### Automatic Array Detection
 
 ```java
 FileAnalysisRequest request = FileAnalysisRequest.builder()
-    .optimizeForBeanIO(true)  // ← Ajoute x-beanio-* hints
+    .fileType(FileType.CSV)
+    .fileContent("ID,Name\n1,A\n2,B\n3,C")
+    .schemaName("Products")
+    .detectArrays(true)  // ← Enable array detection
+    .build();
+
+result.getDetectedArrayFields();  // ["Products"]
+```
+
+### BeanIO Optimization
+
+```java
+FileAnalysisRequest request = FileAnalysisRequest.builder()
+    .optimizeForBeanIO(true)  // ← Add x-beanio-* hints
     .build();
 ```
 
-**JSON Schema généré :**
+**Generated JSON Schema:**
 ```json
 {
   "x-beanio": {
-    "streamFormat": "xml",
+    "streamFormat": "csv",
     "generatePOJO": true
   },
   "properties": {
-    "customerId": {
+    "id": {
       "type": "integer",
-      "x-java-field": "customerId",
+      "x-java-field": "id",
       "x-beanio-field": {
-        "name": "customer_id",
-        "javaName": "customerId",
+        "name": "id",
+        "javaName": "id",
         "typeHandler": "java.lang.Integer"
       }
     }
@@ -358,217 +366,213 @@ FileAnalysisRequest request = FileAnalysisRequest.builder()
 }
 ```
 
-### Options Parser Spécifiques
+### Sample Merging
 
-#### XML
 ```java
-.parserOption("preserveNamespaces", "true")
-.parserOption("includeAttributes", "true")
-.parserOption("detectCDATA", "true")
+FileAnalysisRequest request = FileAnalysisRequest.builder()
+    .fileContent(mainContent)
+    .addSampleFile(sample1)
+    .addSampleFile(sample2)
+    .build();
+
+// Generated schema includes all fields found
+// Optional fields are marked as such
 ```
 
-#### CSV (quand implémenté)
-```java
-.parserOption("delimiter", ";")
-.parserOption("hasHeader", "true")
-.parserOption("encoding", "UTF-8")
-.parserOption("skipLines", "2")
-```
-
-#### Excel (quand implémenté)
-```java
-.parserOption("sheetName", "Data")
-.parserOption("startRow", "1")
-.parserOption("hasHeader", "true")
-```
-
-## 🔐 Règles d'Architecture
+## Architecture Rules
 
 ### ✅ analyzer-core (Pure Java)
 
-**AUTORISÉ :**
-- Jackson XML/CSV
-- Apache POI (Excel)
+**ALLOWED:**
+- Jackson (JSON parsing)
+- OpenCSV (CSV parsing)
 - Apache Commons
 - SLF4J
 
-**INTERDIT :**
+**FORBIDDEN:**
 - Quarkus, Spring, CDI
-- Annotations framework
+- Framework annotations
 
-### ✅ analyzer-quarkus-app (Liberté totale)
+### ✅ analyzer-quarkus-app (Total Freedom)
 
-**AUTORISÉ :**
+**ALLOWED:**
 - Quarkus REST
 - CDI
 - Annotations
 
-### ⚠️ analyzer-sdk-adapter (PURE JAVA STRICT)
+### ⚠️ analyzer-sdk-adapter (STRICT PURE JAVA)
 
-**AUTORISÉ :**
+**ALLOWED:**
 - `sdk-core` dependency
 - `analyzer-core` dependency
 - Pure Java SE
 
-**INTERDIT ABSOLUMENT :**
+**ABSOLUTELY FORBIDDEN:**
 - `@ApplicationScoped`
 - `@Inject`
 - `@Path`
-- Toute annotation framework
+- Any framework annotations
 
-## 📊 JSON Schema Généré (Exemple)
+## Generated JSON Schema Example
 
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Customer",
+  "title": "Product",
   "x-metadata": {
-    "sourceType": "XML",
+    "sourceType": "CSV",
     "generatedBy": "File Schema Analyzer"
   },
-  "type": "object",
-  "properties": {
-    "id": {
-      "type": "integer",
-      "x-java-field": "id"
-    },
-    "name": {
-      "type": "string",
-      "x-java-field": "name"
-    },
-    "orders": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "orderId": {
-            "type": "integer"
-          },
-          "amount": {
-            "type": "number"
-          }
-        }
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "ID": {
+        "type": "integer",
+        "x-java-field": "id"
+      },
+      "Name": {
+        "type": "string",
+        "x-java-field": "name"
+      },
+      "Price": {
+        "type": "number",
+        "x-java-field": "price"
       }
-    }
+    },
+    "required": ["ID", "Name", "Price"]
   },
-  "required": ["id", "name"],
   "x-beanio": {
-    "streamFormat": "xml",
+    "streamFormat": "csv",
     "generatePOJO": true
   }
 }
 ```
 
-## 🧪 Tests
+## Testing
 
 ```bash
-# Tests unitaires
+# Unit tests
 mvn test
 
-# Tests avec couverture
+# Tests with coverage
 mvn test jacoco:report
 
-# Tests d'intégration Quarkus
+# Integration tests (Quarkus)
 cd analyzer-quarkus-app
 mvn verify
 ```
 
-## 🐛 Troubleshooting
+**Test Coverage:**
+- analyzer-core: 93 tests passing
+- analyzer-sdk-adapter: 15 tests passing
 
-### Excel/CSV ne fonctionne pas
+## Troubleshooting
 
-**C'est normal !** Seul XML est implémenté.
+### Error "Parser cannot handle the provided file content"
 
-```bash
-curl http://localhost:8080/api/analyzer/supported-types
-# → available: ["XML"]
+Check that your file content is valid:
+
+**CSV:**
+```csv
+ID,Name,Price
+1,Product A,19.99
+2,Product B,29.99
 ```
 
-Pour ajouter Excel/CSV, voir section "Ajouter un Nouveau Type de Fichier".
-
-### Erreur "Parser cannot handle the provided file content"
-
-Vérifiez que le XML est bien formé :
-
-```xml
-<!-- ✅ Bon -->
-<root>
-    <child>value</child>
-</root>
-
-<!-- ❌ Mauvais -->
-<root>
-    <child>value
-</root>
+**JSON:**
+```json
+{
+  "id": 123,
+  "name": "Product A"
+}
 ```
 
-### Erreur "No parser registered for file type"
+**Fixed-Length:** Ensure field definitions match content length
+**Variable-Length:** Ensure delimiter is consistent
 
-Le type de fichier n'est pas dans l'enum `FileType`. Ajoutez-le :
+### Error "No parser registered for file type"
 
+The file type is not in the `FileType` enum. Supported types:
+- CSV
+- JSON
+- FIXED_LENGTH
+- VARIABLE_LENGTH
+
+### Fixed-Length "Field definitions required"
+
+Fixed-length files require either:
+- `fieldDefinitions` parser option (inline JSON)
+- `descriptorFile` parser option (external descriptor)
+
+Example:
 ```java
-// Dans FileType.java
-TXT("txt", "text/plain", List.of("txt")),
+.parserOption("fieldDefinitions", "[{\"name\":\"id\",\"start\":0,\"length\":5}]")
 ```
 
-## 📖 Documentation
+## Documentation
 
 ### Javadoc
 
 ```bash
 mvn javadoc:javadoc
-# Ouvrir: target/site/apidocs/index.html
+# Open: target/site/apidocs/index.html
 ```
 
-### Architecture Détaillée
+### Key Classes
 
-Voir les Javadocs des classes principales :
-- [FileSchemaAnalyzer.java](analyzer-core/src/main/java/com/datasabai/services/schemaanalyzer/core/FileSchemaAnalyzer.java) : Service principal (8 steps)
-- [FileParser.java](analyzer-core/src/main/java/com/datasabai/services/schemaanalyzer/core/parser/FileParser.java) : Interface Strategy
-- [ParserFactory.java](analyzer-core/src/main/java/com/datasabai/services/schemaanalyzer/core/parser/ParserFactory.java) : Factory Pattern
-- [FileSchemaAnalyzerAdapter.java](analyzer-sdk-adapter/src/main/java/com/datasabai/services/schemaanalyzer/adapter/FileSchemaAnalyzerAdapter.java) : SDK Integration
+- [FileSchemaAnalyzer.java](analyzer-core/src/main/java/com/datasabai/services/schemaanalyzer/core/FileSchemaAnalyzer.java) : Main service (8-step analysis)
+- [FileParser.java](analyzer-core/src/main/java/com/datasabai/services/schemaanalyzer/core/parser/FileParser.java) : Strategy interface
+- [ParserFactory.java](analyzer-core/src/main/java/com/datasabai/services/schemaanalyzer/core/parser/ParserFactory.java) : Factory pattern
+- [TypeInferenceUtil.java](analyzer-core/src/main/java/com/datasabai/services/schemaanalyzer/core/parser/TypeInferenceUtil.java) : Shared type inference
+- [FileSchemaAnalyzerAdapter.java](analyzer-sdk-adapter/src/main/java/com/datasabai/services/schemaanalyzer/adapter/FileSchemaAnalyzerAdapter.java) : SDK integration
 
-## 🎓 Design Patterns Utilisés
+## Design Patterns
 
-| Pattern | Où | Pourquoi |
-|---------|-----|----------|
-| **Strategy** | `FileParser` | Différents algorithmes de parsing |
-| **Factory** | `ParserFactory` | Création de parsers selon type |
-| **Builder** | `FileAnalysisRequest`, etc. | Construction fluide |
-| **Adapter** | `FileSchemaAnalyzerAdapter` | Intégration SDK |
+| Pattern | Where | Why |
+|---------|-------|-----|
+| **Strategy** | `FileParser` | Different parsing algorithms |
+| **Factory** | `ParserFactory` | Parser creation by type |
+| **Builder** | `FileAnalysisRequest`, etc. | Fluent construction |
+| **Adapter** | `FileSchemaAnalyzerAdapter` | SDK integration |
 
-## 📝 TODO / Roadmap
+## Dependencies
 
-- [ ] Implémenter `ExcelFileParser` (Apache POI)
-- [ ] Implémenter `CsvFileParser` (Apache Commons CSV)
-- [ ] Implémenter `JsonFileParser` (Jackson)
-- [ ] Implémenter `TxtFileParser` (Fixed-length)
-- [ ] Support des schémas XSD pour XML
-- [ ] Support des formats Avro/Parquet
-- [ ] UI web pour upload et visualisation
+### Core Dependencies
+- **OpenCSV 5.9** : CSV parsing
+- **Jackson 2.18.2** : JSON parsing
+- **JSON Schema Generator 4.33.1** : Schema generation
+- **SLF4J** : Logging
+- **Apache Commons Lang3** : Utilities
 
-## 🤝 Contribution
+### Test Dependencies
+- **JUnit Jupiter 5.11.4** : Testing framework
+- **AssertJ 3.27.3** : Fluent assertions
 
-Pour ajouter un nouveau type de fichier :
+## Contributing
 
-1. Fork le projet
-2. Créer une branche : `git checkout -b feature/add-json-parser`
-3. Implémenter `MyFileParser implements FileParser`
-4. Ajouter tests
-5. Commit : `git commit -m 'Add JSON parser implementation'`
-6. Push : `git push origin feature/add-json-parser`
-7. Créer une Pull Request
+To add a new file parser:
 
-## 📄 Licence
+1. Fork the project
+2. Create a branch: `git checkout -b feature/add-my-parser`
+3. Implement `MyFileParser implements FileParser`
+4. Add comprehensive tests
+5. Register in `ParserFactory.registerDefaultParsers()`
+6. Update `FileType` enum if needed
+7. Commit: `git commit -m 'Add my parser implementation'`
+8. Push: `git push origin feature/add-my-parser`
+9. Create a Pull Request
+
+## License
 
 Copyright © 2025 Datasabai
 
-## 📞 Contact
+## Contact
 
 - **Service** : File Schema Analyzer
 - **Version** : 1.0.0-SNAPSHOT
-- **Organisation** : Datasabai
+- **Organization** : Datasabai
 
 ---
 
-**Architecture extensible • Pure Java • Intégration SDK • Production Ready**
+**Extensible Architecture • Pure Java • SDK Integration • Production Ready**

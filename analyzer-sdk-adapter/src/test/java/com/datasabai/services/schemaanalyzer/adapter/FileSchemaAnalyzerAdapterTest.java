@@ -1,6 +1,6 @@
 package com.datasabai.services.schemaanalyzer.adapter;
 
-import com.datasabai.hsb.sdk.SdkContext;
+import com.datasabai.hsb.sdk.core.SdkContext;
 import com.datasabai.services.schemaanalyzer.core.model.FileAnalysisRequest;
 import com.datasabai.services.schemaanalyzer.core.model.FileType;
 import com.datasabai.services.schemaanalyzer.core.model.SchemaGenerationResult;
@@ -32,6 +32,8 @@ class FileSchemaAnalyzerAdapterTest {
     void shouldHaveDescription() {
         assertThat(adapter.description()).isNotBlank();
         assertThat(adapter.description()).contains("schema");
+        assertThat(adapter.description()).contains("CSV");
+        assertThat(adapter.description()).contains("JSON");
     }
 
     @Test
@@ -41,81 +43,186 @@ class FileSchemaAnalyzerAdapterTest {
 
     @Test
     void shouldHaveInputType() {
-        assertThat(adapter.getInputType()).isEqualTo(FileAnalysisRequest.class);
+        assertThat(adapter.inputType()).isEqualTo(FileAnalysisRequest.class);
     }
 
     @Test
     void shouldHaveOutputType() {
-        assertThat(adapter.getOutputType()).isEqualTo(SchemaGenerationResult.class);
+        assertThat(adapter.outputType()).isEqualTo(SchemaGenerationResult.class);
     }
 
     @Test
     void shouldHaveConfigurationSchema() {
-        Map<String, String> schema = adapter.getConfigurationSchema();
+        Map<String, String> schema = adapter.configurationSchema();
 
         assertThat(schema).isNotEmpty();
-        assertThat(schema).containsKey("detectArrays");
-        assertThat(schema).containsKey("optimizeForBeanIO");
-        assertThat(schema).containsKey("parserOptions.preserveNamespaces");
-        assertThat(schema).containsKey("parserOptions.delimiter");
+        assertThat(schema).containsKeys(
+                "detectArrays",
+                "optimizeForBeanIO",
+                "parserOptions.delimiter",
+                "parserOptions.hasHeader",
+                "parserOptions.strictMode",
+                "parserOptions.fieldDefinitions",
+                "parserOptions.tagValuePairs"
+        );
     }
 
     @Test
-    void shouldExecuteXmlAnalysis() throws Exception {
-        // Given
-        String xmlContent = """
-                <customer>
-                    <id>123</id>
-                    <name>John Doe</name>
-                </customer>
+    void shouldExecuteCsvAnalysis() throws Exception {
+        String csvContent = """
+                ID,Name,Price
+                1,Product A,19.99
+                2,Product B,29.99
                 """;
 
         FileAnalysisRequest request = FileAnalysisRequest.builder()
-                .fileType(FileType.XML)
-                .fileContent(xmlContent)
-                .schemaName("Customer")
+                .fileType(FileType.CSV)
+                .fileContent(csvContent)
+                .schemaName("Product")
                 .build();
 
-        SdkContext context = new SdkContext();
+        SdkContext context = SdkContext.builder().build();
 
-        // When
         SchemaGenerationResult result = adapter.execute(request, context);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.isSuccess()).isTrue();
-        assertThat(result.getSchemaName()).isEqualTo("Customer");
+        assertThat(result.getSchemaName()).isEqualTo("Product");
+        assertThat(result.getJsonSchema()).isNotNull();
+    }
+
+    @Test
+    void shouldExecuteJsonAnalysis() throws Exception {
+        String jsonContent = """
+                {
+                    "id": 123,
+                    "name": "Product A",
+                    "price": 19.99
+                }
+                """;
+
+        FileAnalysisRequest request = FileAnalysisRequest.builder()
+                .fileType(FileType.JSON)
+                .fileContent(jsonContent)
+                .schemaName("Product")
+                .build();
+
+        SdkContext context = SdkContext.builder().build();
+
+        SchemaGenerationResult result = adapter.execute(request, context);
+
+        assertThat(result).isNotNull();
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.getSchemaName()).isEqualTo("Product");
+        assertThat(result.getJsonSchema()).isNotNull();
+    }
+
+    @Test
+    void shouldExecuteFixedLengthAnalysis() throws Exception {
+        String descriptor = """
+                [
+                  {"name": "id", "start": 0, "length": 5, "type": "integer"},
+                  {"name": "name", "start": 5, "length": 15, "type": "string"}
+                ]
+                """;
+
+        String fileContent = """
+                00001Product A
+                00002Product B
+                """;
+
+        FileAnalysisRequest request = FileAnalysisRequest.builder()
+                .fileType(FileType.FIXED_LENGTH)
+                .fileContent(fileContent)
+                .schemaName("Product")
+                .parserOption("fieldDefinitions", descriptor)
+                .build();
+
+        SdkContext context = SdkContext.builder().build();
+
+        SchemaGenerationResult result = adapter.execute(request, context);
+
+        assertThat(result).isNotNull();
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.getSchemaName()).isEqualTo("Product");
+        assertThat(result.getJsonSchema()).isNotNull();
+    }
+
+    @Test
+    void shouldExecuteVariableLengthAnalysis() throws Exception {
+        String fileContent = """
+                001|Product A|19.99
+                002|Product B|29.99
+                """;
+
+        FileAnalysisRequest request = FileAnalysisRequest.builder()
+                .fileType(FileType.VARIABLE_LENGTH)
+                .fileContent(fileContent)
+                .schemaName("Product")
+                .build();
+
+        SdkContext context = SdkContext.builder().build();
+
+        SchemaGenerationResult result = adapter.execute(request, context);
+
+        assertThat(result).isNotNull();
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.getSchemaName()).isEqualTo("Product");
         assertThat(result.getJsonSchema()).isNotNull();
     }
 
     @Test
     void shouldApplyConfigurationFromContext() throws Exception {
-        // Given
-        String xmlContent = "<simple><field>value</field></simple>";
+        String csvContent = "ID,Name\n1,Product A\n2,Product B";
 
         FileAnalysisRequest request = FileAnalysisRequest.builder()
-                .fileType(FileType.XML)
-                .fileContent(xmlContent)
-                .schemaName("Simple")
+                .fileType(FileType.CSV)
+                .fileContent(csvContent)
+                .schemaName("Product")
                 .build();
 
-        SdkContext context = new SdkContext();
-        context.setConfig("detectArrays", "false");
-        context.setConfig("optimizeForBeanIO", "false");
-        context.setConfig("parserOptions.preserveNamespaces", "false");
+        SdkContext context = SdkContext.builder()
+                .config("detectArrays", "false")
+                .config("optimizeForBeanIO", "false")
+                .config("parserOptions.hasHeader", "true")
+                .config("parserOptions.delimiter", ",")
+                .build();
 
-        // When
         SchemaGenerationResult result = adapter.execute(request, context);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.isSuccess()).isTrue();
-        // Configuration should have been applied to the request
+    }
+
+    @Test
+    void shouldApplyParserOptionsFromContext() throws Exception {
+        String jsonContent = """
+                {
+                    // This is a comment
+                    "id": 123,
+                    "name": "Product A"
+                }
+                """;
+
+        FileAnalysisRequest request = FileAnalysisRequest.builder()
+                .fileType(FileType.JSON)
+                .fileContent(jsonContent)
+                .schemaName("Product")
+                .build();
+
+        SdkContext context = SdkContext.builder()
+                .config("parserOptions.allowComments", "true")
+                .build();
+
+        SchemaGenerationResult result = adapter.execute(request, context);
+
+        assertThat(result).isNotNull();
+        assertThat(result.isSuccess()).isTrue();
     }
 
     @Test
     void shouldThrowExceptionForNullInput() {
-        SdkContext context = new SdkContext();
+        SdkContext context = SdkContext.builder().build();
 
         assertThatThrownBy(() -> adapter.execute(null, context))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -123,123 +230,14 @@ class FileSchemaAnalyzerAdapterTest {
     }
 
     @Test
-    void shouldThrowExceptionForExcelFiles() {
-        // Given
-        FileAnalysisRequest request = FileAnalysisRequest.builder()
-                .fileType(FileType.EXCEL)
-                .fileBytes(new byte[]{1, 2, 3})
-                .schemaName("ExcelData")
-                .build();
-
-        SdkContext context = new SdkContext();
-
-        // When/Then
-        assertThatThrownBy(() -> adapter.execute(request, context))
-                .isInstanceOf(Exception.class)
-                .hasMessageContaining("not yet supported")
-                .hasMessageContaining("Available types");
-    }
-
-    @Test
-    void shouldThrowExceptionForCsvFiles() {
-        // Given
-        FileAnalysisRequest request = FileAnalysisRequest.builder()
-                .fileType(FileType.CSV)
-                .fileContent("id,name\n1,Product")
-                .schemaName("CsvData")
-                .build();
-
-        SdkContext context = new SdkContext();
-
-        // When/Then
-        assertThatThrownBy(() -> adapter.execute(request, context))
-                .isInstanceOf(Exception.class)
-                .hasMessageContaining("not yet supported");
-    }
-
-    @Test
-    void shouldHandleInvalidXml() {
-        // Given
-        FileAnalysisRequest request = FileAnalysisRequest.builder()
-                .fileType(FileType.XML)
-                .fileContent("not valid xml")
-                .schemaName("Invalid")
-                .build();
-
-        SdkContext context = new SdkContext();
-
-        // When/Then
-        assertThatThrownBy(() -> adapter.execute(request, context))
-                .isInstanceOf(Exception.class)
-                .hasMessageContaining("failed");
-    }
-
-    @Test
-    void shouldWorkWithoutContext() throws Exception {
-        // Given
-        String xmlContent = "<simple><field>value</field></simple>";
-
-        FileAnalysisRequest request = FileAnalysisRequest.builder()
-                .fileType(FileType.XML)
-                .fileContent(xmlContent)
-                .schemaName("Simple")
-                .build();
-
-        // When - execute without context (null)
-        SchemaGenerationResult result = adapter.execute(request, null);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.isSuccess()).isTrue();
-    }
-
-    @Test
-    void shouldExposeAnalyzerInstance() {
-        assertThat(adapter.getAnalyzer()).isNotNull();
-    }
-
-    @Test
-    void shouldRejectNullAnalyzerInConstructor() {
+    void shouldThrowExceptionForNullAnalyzerInConstructor() {
         assertThatThrownBy(() -> new FileSchemaAnalyzerAdapter(null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("FileSchemaAnalyzer cannot be null");
     }
 
     @Test
-    void shouldHandleComplexXmlWithContext() throws Exception {
-        // Given
-        String xmlContent = """
-                <library>
-                    <books>
-                        <book isbn="123">
-                            <title>Book 1</title>
-                            <price>29.99</price>
-                        </book>
-                        <book isbn="456">
-                            <title>Book 2</title>
-                            <price>39.99</price>
-                        </book>
-                    </books>
-                </library>
-                """;
-
-        FileAnalysisRequest request = FileAnalysisRequest.builder()
-                .fileType(FileType.XML)
-                .fileContent(xmlContent)
-                .schemaName("Library")
-                .build();
-
-        SdkContext context = new SdkContext();
-        context.setConfig("detectArrays", "true");
-        context.setConfig("optimizeForBeanIO", "true");
-        context.setConfig("parserOptions.includeAttributes", "true");
-
-        // When
-        SchemaGenerationResult result = adapter.execute(request, context);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.isSuccess()).isTrue();
-        assertThat(result.getDetectedArrayFields()).isNotEmpty();
+    void shouldProvideAccessToAnalyzer() {
+        assertThat(adapter.getAnalyzer()).isNotNull();
     }
 }

@@ -1,1 +1,5 @@
-/home/gilbert/datasabai-saas-hsb-sdk-analyzer/analyzer-core/src/test/java/com/datasabai/services/schemaanalyzer/core/FileSchemaAnalyzerTest.java
+/home/gilbert/datasabai-saas-hsb-sdk-analyzer/analyzer-core/src/test/java/com/datasabai/services/schemaanalyzer/core/parser/TypeInferenceUtilTest.java
+/home/gilbert/datasabai-saas-hsb-sdk-analyzer/analyzer-core/src/test/java/com/datasabai/services/schemaanalyzer/core/parser/VariableLengthFileParserTest.java
+/home/gilbert/datasabai-saas-hsb-sdk-analyzer/analyzer-core/src/test/java/com/datasabai/services/schemaanalyzer/core/parser/JsonFileParserTest.java
+/home/gilbert/datasabai-saas-hsb-sdk-analyzer/analyzer-core/src/test/java/com/datasabai/services/schemaanalyzer/core/parser/CsvFileParserTest.java
+/home/gilbert/datasabai-saas-hsb-sdk-analyzer/analyzer-core/src/test/java/com/datasabai/services/schemaanalyzer/core/parser/FixedLengthFileParserTest.java

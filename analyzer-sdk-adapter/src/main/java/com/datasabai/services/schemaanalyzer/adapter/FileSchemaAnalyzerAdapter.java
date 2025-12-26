@@ -1,7 +1,9 @@
 package com.datasabai.services.schemaanalyzer.adapter;
 
-import com.datasabai.hsb.sdk.SdkContext;
-import com.datasabai.hsb.sdk.SdkModule;
+import com.datasabai.hsb.sdk.core.SdkContext;
+import com.datasabai.hsb.sdk.core.SdkModule;
+import com.datasabai.hsb.sdk.core.SdkException;
+import com.datasabai.hsb.sdk.core.capabilities.*;
 import com.datasabai.services.schemaanalyzer.core.FileSchemaAnalyzer;
 import com.datasabai.services.schemaanalyzer.core.model.AnalyzerException;
 import com.datasabai.services.schemaanalyzer.core.model.FileAnalysisRequest;
@@ -39,9 +41,11 @@ import java.util.Map;
  *   <li><b>optimizeForBeanIO</b>: Override BeanIO optimization (true/false)</li>
  *   <li><b>parserOptions.*</b>: Parser-specific options</li>
  *     <ul>
- *       <li>parserOptions.preserveNamespaces (XML)</li>
- *       <li>parserOptions.delimiter (CSV)</li>
- *       <li>parserOptions.sheetName (Excel)</li>
+ *       <li>parserOptions.delimiter (CSV, Variable-Length)</li>
+ *       <li>parserOptions.hasHeader (CSV)</li>
+ *       <li>parserOptions.strictMode (JSON)</li>
+ *       <li>parserOptions.fieldDefinitions (Fixed-Length)</li>
+ *       <li>parserOptions.tagValuePairs (Variable-Length)</li>
  *     </ul>
  * </ul>
  *
@@ -52,12 +56,12 @@ import java.util.Map;
  *     new FileSchemaAnalyzerAdapter();
  *
  * FileAnalysisRequest request = FileAnalysisRequest.builder()
- *     .fileType(FileType.XML)
- *     .fileContent("<customer><id>123</id></customer>")
- *     .schemaName("Customer")
+ *     .fileType(FileType.CSV)
+ *     .fileContent("ID,Name,Price\n1,Product A,19.99\n2,Product B,29.99")
+ *     .schemaName("Product")
  *     .build();
  *
- * SdkContext context = new SdkContext();
+ * SdkContext context = SdkContext.builder().build();
  * SchemaGenerationResult result = module.execute(request, context);
  * }</pre>
  *
@@ -70,7 +74,11 @@ import java.util.Map;
  * @see SdkModule
  * @see FileSchemaAnalyzer
  */
-public class FileSchemaAnalyzerAdapter implements SdkModule<FileAnalysisRequest, SchemaGenerationResult> {
+public class FileSchemaAnalyzerAdapter implements SdkModule<FileAnalysisRequest, SchemaGenerationResult>,
+            DescribableModule,
+            VersionedModule,
+            TypedModule<FileAnalysisRequest, SchemaGenerationResult>,
+            ConfigurableModule {
 
     private final FileSchemaAnalyzer analyzer;
 
@@ -106,7 +114,7 @@ public class FileSchemaAnalyzerAdapter implements SdkModule<FileAnalysisRequest,
 
     @Override
     public String description() {
-        return "Analyzes file schemas (XML, Excel, CSV, etc.) and generates JSON Schemas for BeanIO configuration";
+        return "Analyzes file schemas (CSV, JSON, Fixed-Length, Variable-Length) and generates JSON Schemas for BeanIO configuration";
     }
 
     @Override
@@ -115,7 +123,7 @@ public class FileSchemaAnalyzerAdapter implements SdkModule<FileAnalysisRequest,
     }
 
     @Override
-    public SchemaGenerationResult execute(FileAnalysisRequest input, SdkContext context) throws Exception {
+    public SchemaGenerationResult execute(FileAnalysisRequest input, SdkContext context) throws SdkException {
         if (input == null) {
             throw new IllegalArgumentException("Input request cannot be null");
         }
@@ -131,14 +139,14 @@ public class FileSchemaAnalyzerAdapter implements SdkModule<FileAnalysisRequest,
 
         } catch (AnalyzerException e) {
             // Wrap in Exception for SDK compatibility
-            throw new Exception(
+            throw new SdkException(
                     "File schema analysis failed: " + e.getMessage(),
                     e
             );
 
         } catch (UnsupportedOperationException e) {
             // Handle stub parsers
-            throw new Exception(
+            throw new SdkException(
                     "File type not yet supported: " + e.getMessage() +
                     " Available types: " + analyzer.getAvailableFileTypes(),
                     e
@@ -147,30 +155,46 @@ public class FileSchemaAnalyzerAdapter implements SdkModule<FileAnalysisRequest,
     }
 
     @Override
-    public Class<FileAnalysisRequest> getInputType() {
+    public Class<FileAnalysisRequest> inputType() {
         return FileAnalysisRequest.class;
     }
 
     @Override
-    public Class<SchemaGenerationResult> getOutputType() {
+    public Class<SchemaGenerationResult> outputType() {
         return SchemaGenerationResult.class;
     }
 
     @Override
-    public Map<String, String> getConfigurationSchema() {
+    public Map<String, String> configurationSchema() {
         Map<String, String> schema = new HashMap<>();
 
         // General configuration
         schema.put("detectArrays", "Enable automatic array detection (true/false, default: true)");
         schema.put("optimizeForBeanIO", "Optimize schema for BeanIO generation (true/false, default: true)");
 
-        // Parser-specific options
-        schema.put("parserOptions.preserveNamespaces", "XML: Preserve namespace prefixes (true/false, default: true)");
-        schema.put("parserOptions.includeAttributes", "XML: Include XML attributes (true/false, default: true)");
+        // CSV parser options
         schema.put("parserOptions.delimiter", "CSV: Column delimiter (default: ,)");
         schema.put("parserOptions.hasHeader", "CSV: First row is header (true/false, default: true)");
-        schema.put("parserOptions.sheetName", "Excel: Sheet name to parse (default: first sheet)");
-        schema.put("parserOptions.startRow", "Excel: Row index where data starts (default: 0)");
+        schema.put("parserOptions.encoding", "CSV: File encoding (default: UTF-8)");
+        schema.put("parserOptions.quoteChar", "CSV: Quote character (default: \")");
+        schema.put("parserOptions.escapeChar", "CSV: Escape character (default: \\)");
+        schema.put("parserOptions.skipLines", "CSV: Lines to skip at beginning (default: 0)");
+        schema.put("parserOptions.sampleRows", "CSV: Rows to sample for type inference (default: 100)");
+
+        // JSON parser options
+        schema.put("parserOptions.strictMode", "JSON: Enable strict validation (true/false, default: true)");
+        schema.put("parserOptions.allowComments", "JSON: Allow comments (true/false, default: false)");
+        schema.put("parserOptions.allowTrailingCommas", "JSON: Allow trailing commas (true/false, default: false)");
+
+        // Fixed-Length parser options
+        schema.put("parserOptions.descriptorFile", "Fixed-Length: Descriptor JSON content (default: null)");
+        schema.put("parserOptions.fieldDefinitions", "Fixed-Length: Inline field definitions JSON (default: null)");
+        schema.put("parserOptions.trimFields", "Fixed-Length: Trim whitespace (true/false, default: true)");
+        schema.put("parserOptions.recordLength", "Fixed-Length: Expected record length (default: null)");
+
+        // Variable-Length parser options
+        schema.put("parserOptions.tagValuePairs", "Variable-Length: Enable tag-value mode (true/false, default: false)");
+        schema.put("parserOptions.tagValueDelimiter", "Variable-Length: Tag-value delimiter (default: =)");
 
         return schema;
     }
@@ -187,18 +211,16 @@ public class FileSchemaAnalyzerAdapter implements SdkModule<FileAnalysisRequest,
      */
     private void applyContextConfiguration(FileAnalysisRequest request, SdkContext context) {
         // Apply detectArrays if configured
-        String detectArraysStr = context.getConfig("detectArrays");
-        if (detectArraysStr != null) {
-            boolean detectArrays = Boolean.parseBoolean(detectArraysStr);
-            request.setDetectArrays(detectArrays);
-        }
+context.getConfig("detectArrays").ifPresent(value ->
+    request.setDetectArrays(Boolean.parseBoolean(value))
+);
+
 
         // Apply optimizeForBeanIO if configured
-        String optimizeForBeanIOStr = context.getConfig("optimizeForBeanIO");
-        if (optimizeForBeanIOStr != null) {
-            boolean optimizeForBeanIO = Boolean.parseBoolean(optimizeForBeanIOStr);
-            request.setOptimizeForBeanIO(optimizeForBeanIO);
-        }
+context.getConfig("optimizeForBeanIO").ifPresent(value ->
+    request.setOptimizeForBeanIO(Boolean.parseBoolean(value))
+);
+
 
         // Apply parser options
         Map<String, String> parserOptions = new HashMap<>();

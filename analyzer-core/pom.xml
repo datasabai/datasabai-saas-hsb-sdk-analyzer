@@ -15,21 +15,24 @@
     <packaging>jar</packaging>
 
     <name>Analyzer Core</name>
-    <description>Pure Java core library for file schema analysis - NO framework dependencies</description>
+    <description>Pure Java core library for file schema analysis (CSV, JSON, Fixed-length, Variable-length) - NO framework dependencies</description>
 
     <dependencies>
-        <!-- Jackson for XML/JSON parsing -->
+        <!-- Jackson for JSON parsing -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-xml</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
+        <!-- OpenCSV for CSV parsing -->
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>${opencsv.version}</version>
         </dependency>
 
         <!-- JSON Schema Generator -->
@@ -54,25 +57,6 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
-        <!-- FUTURE: Uncomment when implementing Excel support -->
-        <!--
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi-ooxml</artifactId>
-        </dependency>
-        -->
-
-        <!-- FUTURE: Uncomment when implementing CSV support -->
-        <!--
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-csv</artifactId>
-        </dependency>
-        -->
 
         <!-- Testing -->
         <dependency>

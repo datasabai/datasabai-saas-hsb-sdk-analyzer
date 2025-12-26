@@ -62,11 +62,10 @@ public class SchemaOptimizer {
 
         // Apply file type specific optimizations
         switch (fileType) {
-            case XML -> optimizeForXml(optimized);
-            case EXCEL -> optimizeForExcel(optimized);
             case CSV -> optimizeForCsv(optimized);
             case JSON -> optimizeForJson(optimized);
-            case TXT -> optimizeForTxt(optimized);
+            case FIXED_LENGTH -> optimizeForFixedLength(optimized);
+            case VARIABLE_LENGTH -> optimizeForVariableLength(optimized);
         }
 
         log.debug("Schema optimization completed");
@@ -156,11 +155,10 @@ public class SchemaOptimizer {
      */
     private String getBeanIOStreamFormat(FileType fileType) {
         return switch (fileType) {
-            case XML -> "xml";
             case CSV -> "csv";
-            case EXCEL -> "csv"; // BeanIO doesn't have native Excel support, map to CSV
             case JSON -> "json";
-            case TXT -> "fixedlength";
+            case FIXED_LENGTH -> "fixedlength";
+            case VARIABLE_LENGTH -> "delimited";
         };
     }
 
@@ -207,55 +205,6 @@ public class SchemaOptimizer {
     }
 
     /**
-     * Applies XML-specific optimizations.
-     */
-    private void optimizeForXml(Map<String, Object> schema) {
-        log.debug("Applying XML optimizations");
-
-        Map<String, Object> xmlHints = new LinkedHashMap<>();
-        xmlHints.put("preserveNamespaces", true);
-        xmlHints.put("attributePrefix", "@");
-
-        schema.put("x-xml", xmlHints);
-
-        // Process properties to distinguish elements vs attributes
-        if (schema.containsKey("properties")) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> properties = (Map<String, Object>) schema.get("properties");
-            markXmlAttributes(properties);
-        }
-    }
-
-    /**
-     * Marks XML attributes in properties.
-     */
-    private void markXmlAttributes(Map<String, Object> properties) {
-        for (Map.Entry<String, Object> entry : properties.entrySet()) {
-            String propName = entry.getKey();
-            Object propValue = entry.getValue();
-
-            if (propValue instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> propSchema = (Map<String, Object>) propValue;
-
-                // Check if this was originally an attribute (from x-namespace or context)
-                if (propName.startsWith("@")) {
-                    propSchema.put("x-xml-attribute", true);
-                } else {
-                    propSchema.put("x-xml-attribute", false);
-                }
-
-                // Recursively process nested properties
-                if (propSchema.containsKey("properties")) {
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> nestedProps = (Map<String, Object>) propSchema.get("properties");
-                    markXmlAttributes(nestedProps);
-                }
-            }
-        }
-    }
-
-    /**
      * Applies CSV-specific optimizations.
      */
     private void optimizeForCsv(Map<String, Object> schema) {
@@ -292,27 +241,6 @@ public class SchemaOptimizer {
     }
 
     /**
-     * Applies Excel-specific optimizations.
-     */
-    private void optimizeForExcel(Map<String, Object> schema) {
-        log.debug("Applying Excel optimizations");
-
-        Map<String, Object> excelHints = new LinkedHashMap<>();
-        excelHints.put("sheetName", "Sheet1");
-        excelHints.put("startRow", 0);
-        excelHints.put("hasHeader", true);
-
-        schema.put("x-excel", excelHints);
-
-        // Excel uses similar structure to CSV
-        if (schema.containsKey("properties")) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> properties = (Map<String, Object>) schema.get("properties");
-            addColumnPositions(properties);
-        }
-    }
-
-    /**
      * Applies JSON-specific optimizations.
      */
     private void optimizeForJson(Map<String, Object> schema) {
@@ -325,14 +253,57 @@ public class SchemaOptimizer {
     }
 
     /**
-     * Applies TXT (fixed-length) specific optimizations.
+     * Applies Fixed-Length specific optimizations.
      */
-    private void optimizeForTxt(Map<String, Object> schema) {
-        log.debug("Applying TXT optimizations");
+    private void optimizeForFixedLength(Map<String, Object> schema) {
+        log.debug("Applying Fixed-Length optimizations");
 
-        Map<String, Object> txtHints = new LinkedHashMap<>();
-        txtHints.put("format", "fixedlength");
+        Map<String, Object> fixedLengthHints = new LinkedHashMap<>();
+        fixedLengthHints.put("format", "fixedlength");
 
-        schema.put("x-txt", txtHints);
+        schema.put("x-fixed-length", fixedLengthHints);
+
+        // Add field positions if properties exist
+        if (schema.containsKey("properties")) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> properties = (Map<String, Object>) schema.get("properties");
+            addFieldPositions(properties);
+        }
+    }
+
+    /**
+     * Applies Variable-Length specific optimizations.
+     */
+    private void optimizeForVariableLength(Map<String, Object> schema) {
+        log.debug("Applying Variable-Length optimizations");
+
+        Map<String, Object> variableLengthHints = new LinkedHashMap<>();
+        variableLengthHints.put("delimiter", "|");
+        variableLengthHints.put("format", "delimited");
+
+        schema.put("x-variable-length", variableLengthHints);
+
+        // Add field positions
+        if (schema.containsKey("properties")) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> properties = (Map<String, Object>) schema.get("properties");
+            addColumnPositions(properties);
+        }
+    }
+
+    /**
+     * Adds field positions to Fixed-Length properties.
+     */
+    private void addFieldPositions(Map<String, Object> properties) {
+        int position = 0;
+        for (Map.Entry<String, Object> entry : properties.entrySet()) {
+            Object propValue = entry.getValue();
+            if (propValue instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> propSchema = (Map<String, Object>) propValue;
+                propSchema.put("x-field-position", position);
+                position++;
+            }
+        }
     }
 }

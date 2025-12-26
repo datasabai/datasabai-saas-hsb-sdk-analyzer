@@ -12,15 +12,14 @@
 
     <name>File Schema Analyzer Service</name>
     <description>
-        Extensible file schema analyzer supporting multiple file types (XML, Excel, CSV, TXT, JSON).
+        Extensible file schema analyzer supporting multiple file types (CSV, JSON, Fixed-length, Variable-length).
         Generates JSON Schemas for BeanIO configuration generation.
     </description>
 
     <modules>
         <module>analyzer-core</module>
         <module>analyzer-quarkus-app</module>
-        <!-- Temporarily disabled until sdk-core is available -->
-        <!-- <module>analyzer-sdk-adapter</module> -->
+        <module>analyzer-sdk-adapter</module>
     </modules>
 
     <properties>
@@ -38,11 +37,10 @@
         <!-- JSON Schema -->
         <jsonschema-generator.version>4.33.1</jsonschema-generator.version>
 
-        <!-- Apache POI (for future Excel support) -->
-        <poi.version>5.2.5</poi.version>
+        <!-- OpenCSV -->
+        <opencsv.version>5.9</opencsv.version>
 
         <!-- Apache Commons -->
-        <commons-csv.version>1.10.0</commons-csv.version>
         <commons-lang3.version>3.14.0</commons-lang3.version>
 
         <!-- Logging -->
@@ -83,11 +81,6 @@
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.dataformat</groupId>
-                <artifactId>jackson-dataformat-xml</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>com.fasterxml.jackson.datatype</groupId>
                 <artifactId>jackson-datatype-jsr310</artifactId>
                 <version>${jackson.version}</version>
@@ -105,24 +98,14 @@
                 <version>${jsonschema-generator.version}</version>
             </dependency>
 
-            <!-- Apache POI (for future Excel support) -->
+            <!-- OpenCSV -->
             <dependency>
-                <groupId>org.apache.poi</groupId>
-                <artifactId>poi</artifactId>
-                <version>${poi.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.poi</groupId>
-                <artifactId>poi-ooxml</artifactId>
-                <version>${poi.version}</version>
+                <groupId>com.opencsv</groupId>
+                <artifactId>opencsv</artifactId>
+                <version>${opencsv.version}</version>
             </dependency>
 
             <!-- Apache Commons -->
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-csv</artifactId>
-                <version>${commons-csv.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>

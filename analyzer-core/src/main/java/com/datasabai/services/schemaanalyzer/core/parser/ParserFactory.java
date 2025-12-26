@@ -58,20 +58,16 @@ public class ParserFactory {
     /**
      * Registers default parsers for all known file types.
      * <p>
-     * This includes both implemented parsers (XML) and stubs (Excel, CSV, etc.).
+     * All core file format parsers are registered here:
+     * CSV, JSON, Fixed-Length, and Variable-Length.
      * </p>
      */
     private void registerDefaultParsers() {
-        // Implemented parsers
-        registerParser(new XmlFileParser());
-        log.info("Registered XmlFileParser for {}", FileType.XML);
-
-        // Stub parsers (for future implementation)
-        registerParser(new ExcelFileParser());
-        log.debug("Registered ExcelFileParser (stub) for {}", FileType.EXCEL);
-
+        // Register all implemented parsers
         registerParser(new CsvFileParser());
-        log.debug("Registered CsvFileParser (stub) for {}", FileType.CSV);
+        registerParser(new JsonFileParser());
+        registerParser(new FixedLengthFileParser());
+        registerParser(new VariableLengthFileParser());
 
         log.info("ParserFactory initialized with {} parsers", parsers.size());
     }
@@ -180,9 +176,9 @@ public class ParserFactory {
      * @return true if implemented
      */
     private boolean isParserImplemented(FileParser parser) {
-        // Currently, only XmlFileParser is fully implemented
-        // This can be enhanced to check more dynamically
-        return parser instanceof XmlFileParser;
+        // All parsers are fully implemented (no stubs)
+        // This method will be updated as parsers are added
+        return parser != null;
     }
 
     /**
