@@ -11,44 +11,33 @@ public class TypeInferenceUtilTest {
 
     @Test
     public void testInferType_Integer() {
-        // Positive integers
-        assertThat(TypeInferenceUtil.inferType("123")).isEqualTo("integer");
-        assertThat(TypeInferenceUtil.inferType("0")).isEqualTo("integer");
-
-        // Negative integers
-        assertThat(TypeInferenceUtil.inferType("-456")).isEqualTo("integer");
-
-        // With whitespace
-        assertThat(TypeInferenceUtil.inferType("  789  ")).isEqualTo("integer");
+        // All numeric values now return "string" as we cannot reliably infer types from raw data
+        // For example, "123456789" might be an order number, not a true integer
+        assertThat(TypeInferenceUtil.inferType("123")).isEqualTo("string");
+        assertThat(TypeInferenceUtil.inferType("0")).isEqualTo("string");
+        assertThat(TypeInferenceUtil.inferType("-456")).isEqualTo("string");
+        assertThat(TypeInferenceUtil.inferType("  789  ")).isEqualTo("string");
     }
 
     @Test
     public void testInferType_Number() {
-        // Positive decimals
-        assertThat(TypeInferenceUtil.inferType("12.34")).isEqualTo("number");
-        assertThat(TypeInferenceUtil.inferType("0.5")).isEqualTo("number");
-
-        // Negative decimals
-        assertThat(TypeInferenceUtil.inferType("-45.67")).isEqualTo("number");
-
-        // With whitespace
-        assertThat(TypeInferenceUtil.inferType("  89.01  ")).isEqualTo("number");
+        // All numeric values now return "string" as we cannot reliably infer types from raw data
+        assertThat(TypeInferenceUtil.inferType("12.34")).isEqualTo("string");
+        assertThat(TypeInferenceUtil.inferType("0.5")).isEqualTo("string");
+        assertThat(TypeInferenceUtil.inferType("-45.67")).isEqualTo("string");
+        assertThat(TypeInferenceUtil.inferType("  89.01  ")).isEqualTo("string");
     }
 
     @Test
     public void testInferType_Boolean() {
-        // True values
-        assertThat(TypeInferenceUtil.inferType("true")).isEqualTo("boolean");
-        assertThat(TypeInferenceUtil.inferType("True")).isEqualTo("boolean");
-        assertThat(TypeInferenceUtil.inferType("TRUE")).isEqualTo("boolean");
-
-        // False values
-        assertThat(TypeInferenceUtil.inferType("false")).isEqualTo("boolean");
-        assertThat(TypeInferenceUtil.inferType("False")).isEqualTo("boolean");
-        assertThat(TypeInferenceUtil.inferType("FALSE")).isEqualTo("boolean");
-
-        // With whitespace
-        assertThat(TypeInferenceUtil.inferType("  true  ")).isEqualTo("boolean");
+        // All values now return "string" as we cannot reliably infer types from raw data
+        assertThat(TypeInferenceUtil.inferType("true")).isEqualTo("string");
+        assertThat(TypeInferenceUtil.inferType("True")).isEqualTo("string");
+        assertThat(TypeInferenceUtil.inferType("TRUE")).isEqualTo("string");
+        assertThat(TypeInferenceUtil.inferType("false")).isEqualTo("string");
+        assertThat(TypeInferenceUtil.inferType("False")).isEqualTo("string");
+        assertThat(TypeInferenceUtil.inferType("FALSE")).isEqualTo("string");
+        assertThat(TypeInferenceUtil.inferType("  true  ")).isEqualTo("string");
     }
 
     @Test

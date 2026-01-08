@@ -110,10 +110,10 @@ public class CsvFileParserTest {
         assertThat(item.getType()).isEqualTo("object");
         assertThat(item.getChildren()).hasSize(4);
 
-        // Verify columns
+        // Verify columns - all types are now "string" since type inference cannot reliably determine semantic types
         StructureElement idColumn = item.findChild("ID");
         assertThat(idColumn).isNotNull();
-        assertThat(idColumn.getType()).isEqualTo("integer");
+        assertThat(idColumn.getType()).isEqualTo("string");
 
         StructureElement nameColumn = item.findChild("Name");
         assertThat(nameColumn).isNotNull();
@@ -121,11 +121,11 @@ public class CsvFileParserTest {
 
         StructureElement priceColumn = item.findChild("Price");
         assertThat(priceColumn).isNotNull();
-        assertThat(priceColumn.getType()).isEqualTo("number");
+        assertThat(priceColumn.getType()).isEqualTo("string");
 
         StructureElement inStockColumn = item.findChild("InStock");
         assertThat(inStockColumn).isNotNull();
-        assertThat(inStockColumn.getType()).isEqualTo("boolean");
+        assertThat(inStockColumn.getType()).isEqualTo("string");
     }
 
     @Test
@@ -157,13 +157,13 @@ public class CsvFileParserTest {
         StructureElement item = root.getChildren().get(0);
         assertThat(item.getChildren()).hasSize(3);
 
-        // Verify generated column names
+        // Verify generated column names - all types are "string"
         assertThat(item.findChild("column1")).isNotNull();
-        assertThat(item.findChild("column1").getType()).isEqualTo("integer");
+        assertThat(item.findChild("column1").getType()).isEqualTo("string");
         assertThat(item.findChild("column2")).isNotNull();
         assertThat(item.findChild("column2").getType()).isEqualTo("string");
         assertThat(item.findChild("column3")).isNotNull();
-        assertThat(item.findChild("column3").getType()).isEqualTo("number");
+        assertThat(item.findChild("column3").getType()).isEqualTo("string");
     }
 
     @Test
@@ -184,19 +184,11 @@ public class CsvFileParserTest {
         StructureElement root = parser.parse(request);
         StructureElement item = root.getChildren().get(0);
 
-        // Integer column stays integer
-        assertThat(item.findChild("IntCol").getType()).isEqualTo("integer");
-
-        // Number column (has decimal) stays number
-        assertThat(item.findChild("NumberCol").getType()).isEqualTo("number");
-
-        // String column stays string
+        // All columns are now inferred as "string" since we cannot reliably determine types from raw data
+        assertThat(item.findChild("IntCol").getType()).isEqualTo("string");
+        assertThat(item.findChild("NumberCol").getType()).isEqualTo("string");
         assertThat(item.findChild("StringCol").getType()).isEqualTo("string");
-
-        // Boolean column stays boolean
-        assertThat(item.findChild("BoolCol").getType()).isEqualTo("boolean");
-
-        // Mixed column (integer + string) → string (widened)
+        assertThat(item.findChild("BoolCol").getType()).isEqualTo("string");
         assertThat(item.findChild("MixedCol").getType()).isEqualTo("string");
     }
 
@@ -365,10 +357,10 @@ public class CsvFileParserTest {
         assertThat(item.findChild("Name").getType()).isEqualTo("string");
 
         // Price: number in csv2 and csv3
-        assertThat(item.findChild("Price").getType()).isEqualTo("number");
+        assertThat(item.findChild("Price").getType()).isEqualTo("string");
 
-        // InStock: boolean only in csv3
-        assertThat(item.findChild("InStock").getType()).isEqualTo("boolean");
+        // InStock: all types are now "string"
+        assertThat(item.findChild("InStock").getType()).isEqualTo("string");
     }
 
     @Test

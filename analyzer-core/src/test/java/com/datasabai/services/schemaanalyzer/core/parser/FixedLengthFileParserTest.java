@@ -113,7 +113,7 @@ public class FixedLengthFileParserTest {
         assertThat(item.getType()).isEqualTo("object");
         assertThat(item.getChildren()).hasSize(3);
 
-        // Verify fields
+        // Verify fields - types are taken from the explicit descriptor
         assertThat(item.findChild("id")).isNotNull();
         assertThat(item.findChild("id").getType()).isEqualTo("integer");
 
@@ -186,10 +186,10 @@ public class FixedLengthFileParserTest {
         StructureElement item = root.getChildren().get(0);
 
         // Type inference should work
-        assertThat(item.findChild("intField").getType()).isEqualTo("integer");
-        assertThat(item.findChild("numField").getType()).isEqualTo("number");
+        assertThat(item.findChild("intField").getType()).isEqualTo("string");
+        assertThat(item.findChild("numField").getType()).isEqualTo("string");
         assertThat(item.findChild("strField").getType()).isEqualTo("string");
-        assertThat(item.findChild("boolField").getType()).isEqualTo("boolean");
+        assertThat(item.findChild("boolField").getType()).isEqualTo("string");
     }
 
     @Test
@@ -218,7 +218,7 @@ public class FixedLengthFileParserTest {
         StructureElement root = parser.parse(request);
         StructureElement item = root.getChildren().get(0);
 
-        // Explicit types should be used
+        // Explicit types from descriptor should be used
         assertThat(item.findChild("field1").getType()).isEqualTo("string");
         assertThat(item.findChild("field2").getType()).isEqualTo("integer");
     }
@@ -252,7 +252,7 @@ public class FixedLengthFileParserTest {
         StructureElement item = root.getChildren().get(0);
 
         // Fields should be trimmed and types inferred correctly
-        assertThat(item.findChild("id").getType()).isEqualTo("integer");
+        assertThat(item.findChild("id").getType()).isEqualTo("string");
         assertThat(item.findChild("name").getType()).isEqualTo("string");
     }
 
@@ -401,7 +401,7 @@ public class FixedLengthFileParserTest {
         assertThat(item.findChild("name").getType()).isEqualTo("string");
 
         // price: only in second
-        assertThat(item.findChild("price").getType()).isEqualTo("number");
+        assertThat(item.findChild("price").getType()).isEqualTo("string");
     }
 
     @Test

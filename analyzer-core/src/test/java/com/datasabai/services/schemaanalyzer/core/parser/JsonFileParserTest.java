@@ -113,16 +113,16 @@ public class JsonFileParserTest {
 
         // Verify fields
         assertThat(root.findChild("id")).isNotNull();
-        assertThat(root.findChild("id").getType()).isEqualTo("integer");
+        assertThat(root.findChild("id").getType()).isEqualTo("string");
 
         assertThat(root.findChild("name")).isNotNull();
         assertThat(root.findChild("name").getType()).isEqualTo("string");
 
         assertThat(root.findChild("price")).isNotNull();
-        assertThat(root.findChild("price").getType()).isEqualTo("number");
+        assertThat(root.findChild("price").getType()).isEqualTo("string");
 
         assertThat(root.findChild("inStock")).isNotNull();
-        assertThat(root.findChild("inStock").getType()).isEqualTo("boolean");
+        assertThat(root.findChild("inStock").getType()).isEqualTo("string");
     }
 
     @Test
@@ -161,7 +161,7 @@ public class JsonFileParserTest {
         assertThat(item.getChildren()).hasSize(2);
 
         assertThat(item.findChild("id")).isNotNull();
-        assertThat(item.findChild("id").getType()).isEqualTo("integer");
+        assertThat(item.findChild("id").getType()).isEqualTo("string");
 
         assertThat(item.findChild("name")).isNotNull();
         assertThat(item.findChild("name").getType()).isEqualTo("string");
@@ -197,7 +197,7 @@ public class JsonFileParserTest {
         assertThat(product.getType()).isEqualTo("object");
 
         assertThat(product.findChild("id")).isNotNull();
-        assertThat(product.findChild("id").getType()).isEqualTo("integer");
+        assertThat(product.findChild("id").getType()).isEqualTo("string");
 
         StructureElement details = product.findChild("details");
         assertThat(details).isNotNull();
@@ -270,10 +270,10 @@ public class JsonFileParserTest {
 
         StructureElement root = parser.parse(request);
 
-        assertThat(root.findChild("intValue").getType()).isEqualTo("integer");
-        assertThat(root.findChild("floatValue").getType()).isEqualTo("number");
+        assertThat(root.findChild("intValue").getType()).isEqualTo("string");
+        assertThat(root.findChild("floatValue").getType()).isEqualTo("string");
         assertThat(root.findChild("stringValue").getType()).isEqualTo("string");
-        assertThat(root.findChild("boolValue").getType()).isEqualTo("boolean");
+        assertThat(root.findChild("boolValue").getType()).isEqualTo("string");
         assertThat(root.findChild("nullValue").getType()).isEqualTo("null");
         assertThat(root.findChild("arrayValue").getType()).isEqualTo("array");
         assertThat(root.findChild("objectValue").getType()).isEqualTo("object");
@@ -301,7 +301,7 @@ public class JsonFileParserTest {
         // TypeInferenceUtil should refine string types
         assertThat(root.findChild("email").getType()).isEqualTo("string");
         assertThat(root.findChild("date").getType()).isEqualTo("string");
-        assertThat(root.findChild("number").getType()).isEqualTo("integer");
+        assertThat(root.findChild("number").getType()).isEqualTo("string");
         assertThat(root.findChild("text").getType()).isEqualTo("string");
     }
 
@@ -387,10 +387,10 @@ public class JsonFileParserTest {
         assertThat(merged.findChild("name").getType()).isEqualTo("string");
 
         // price: number in json2 and json3
-        assertThat(merged.findChild("price").getType()).isEqualTo("number");
+        assertThat(merged.findChild("price").getType()).isEqualTo("string");
 
         // inStock: boolean only in json3
-        assertThat(merged.findChild("inStock").getType()).isEqualTo("boolean");
+        assertThat(merged.findChild("inStock").getType()).isEqualTo("string");
     }
 
     @Test

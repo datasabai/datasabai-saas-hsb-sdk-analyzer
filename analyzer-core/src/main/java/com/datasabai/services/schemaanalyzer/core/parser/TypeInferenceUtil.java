@@ -1,45 +1,33 @@
 package com.datasabai.services.schemaanalyzer.core.parser;
 
-import java.util.regex.Pattern;
-
 /**
  * Utility class for type inference from string values.
  * <p>
- * This class provides common type inference patterns used by all file parsers
- * to detect data types from string representations.
+ * This class provides type inference for file parsers. By default, all values
+ * are inferred as "string" type since automatic type detection from raw data
+ * (CSV, JSON, etc.) cannot reliably determine the true semantic type.
  * </p>
  * <p>
- * Type inference uses pattern matching in the following order of precedence:
+ * For example, a value like "123456789" might appear numeric but could actually
+ * be a string field (order number, product code) that may contain alphanumeric
+ * values like "1234AZ443" in other records.
  * </p>
- * <ol>
- *   <li>Null or blank → "null"</li>
- *   <li>Boolean (true/false) → "boolean"</li>
- *   <li>Integer (-?\d+) → "integer"</li>
- *   <li>Decimal (-?\d+\.\d+) → "number"</li>
- *   <li>Date (YYYY-MM-DD*) → "string" (with date format hint)</li>
- *   <li>Email → "string" (with email format hint)</li>
- *   <li>Default → "string"</li>
- * </ol>
+ * <p>
+ * Type enrichment should be done in a later processing step based on business rules.
+ * </p>
  *
  * <h3>Usage Example:</h3>
  * <pre>{@code
- * String type1 = TypeInferenceUtil.inferType("123");        // "integer"
- * String type2 = TypeInferenceUtil.inferType("12.34");      // "number"
- * String type3 = TypeInferenceUtil.inferType("true");       // "boolean"
+ * String type1 = TypeInferenceUtil.inferType("123");        // "string"
+ * String type2 = TypeInferenceUtil.inferType("12.34");      // "string"
+ * String type3 = TypeInferenceUtil.inferType("true");       // "string"
  * String type4 = TypeInferenceUtil.inferType("hello");      // "string"
  *
  * // Merge types from multiple samples
- * String merged = TypeInferenceUtil.mergeTypes("integer", "number"); // "number"
+ * String merged = TypeInferenceUtil.mergeTypes("string", "string"); // "string"
  * }</pre>
  */
 public class TypeInferenceUtil {
-
-    // Pattern constants for type detection
-    private static final Pattern INTEGER_PATTERN = Pattern.compile("^-?\\d+$");
-    private static final Pattern DECIMAL_PATTERN = Pattern.compile("^-?\\d+\\.\\d+$");
-    private static final Pattern BOOLEAN_PATTERN = Pattern.compile("^(true|false)$", Pattern.CASE_INSENSITIVE);
-    private static final Pattern DATE_PATTERN = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}.*");
-    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
 
     /**
      * Private constructor to prevent instantiation.
@@ -51,46 +39,25 @@ public class TypeInferenceUtil {
     /**
      * Infers the JSON Schema type from a string value.
      * <p>
-     * Uses pattern matching to detect the most specific type.
-     * Returns JSON Schema type names: "string", "integer", "number", "boolean", "null".
+     * Always returns "string" type by default, as type inference from raw data
+     * (CSV, JSON, etc.) cannot accurately determine the true semantic type.
+     * For example, "123456789" might appear to be an integer but could actually
+     * be a string field like an order number that might contain "1234AZ443".
+     * </p>
+     * <p>
+     * The schema will be enriched with correct types in a later processing step.
      * </p>
      *
      * @param value the string value to analyze
-     * @return the inferred JSON Schema type
+     * @return always returns "string" (or "null" for null/blank values)
      */
     public static String inferType(String value) {
         if (value == null || value.isBlank()) {
             return "null";
         }
 
-        String trimmed = value.trim();
-
-        // Check boolean first (most specific)
-        if (BOOLEAN_PATTERN.matcher(trimmed).matches()) {
-            return "boolean";
-        }
-
-        // Check integer
-        if (INTEGER_PATTERN.matcher(trimmed).matches()) {
-            return "integer";
-        }
-
-        // Check decimal/number
-        if (DECIMAL_PATTERN.matcher(trimmed).matches()) {
-            return "number";
-        }
-
-        // Check date (returns string, but could add format hint in the future)
-        if (DATE_PATTERN.matcher(trimmed).matches()) {
-            return "string"; // Could be enhanced to return date format
-        }
-
-        // Check email (returns string, but could add format hint in the future)
-        if (EMAIL_PATTERN.matcher(trimmed).matches()) {
-            return "string"; // Could be enhanced to return email format
-        }
-
-        // Default to string
+        // Always return string type for all non-null values
+        // Type enrichment will be done in a later processing step
         return "string";
     }
 

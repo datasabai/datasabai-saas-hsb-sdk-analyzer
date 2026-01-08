@@ -82,16 +82,16 @@ public class VariableLengthFileParserTest {
 
         // Verify generated field names
         assertThat(item.findChild("field1")).isNotNull();
-        assertThat(item.findChild("field1").getType()).isEqualTo("integer");
+        assertThat(item.findChild("field1").getType()).isEqualTo("string");
 
         assertThat(item.findChild("field2")).isNotNull();
         assertThat(item.findChild("field2").getType()).isEqualTo("string");
 
         assertThat(item.findChild("field3")).isNotNull();
-        assertThat(item.findChild("field3").getType()).isEqualTo("number");
+        assertThat(item.findChild("field3").getType()).isEqualTo("string");
 
         assertThat(item.findChild("field4")).isNotNull();
-        assertThat(item.findChild("field4").getType()).isEqualTo("boolean");
+        assertThat(item.findChild("field4").getType()).isEqualTo("string");
     }
 
     @Test
@@ -222,16 +222,16 @@ public class VariableLengthFileParserTest {
 
         // Verify tag names used
         assertThat(item.findChild("ID")).isNotNull();
-        assertThat(item.findChild("ID").getType()).isEqualTo("integer");
+        assertThat(item.findChild("ID").getType()).isEqualTo("string");
 
         assertThat(item.findChild("NAME")).isNotNull();
         assertThat(item.findChild("NAME").getType()).isEqualTo("string");
 
         assertThat(item.findChild("PRICE")).isNotNull();
-        assertThat(item.findChild("PRICE").getType()).isEqualTo("number");
+        assertThat(item.findChild("PRICE").getType()).isEqualTo("string");
 
         assertThat(item.findChild("INSTOCK")).isNotNull();
-        assertThat(item.findChild("INSTOCK").getType()).isEqualTo("boolean");
+        assertThat(item.findChild("INSTOCK").getType()).isEqualTo("string");
     }
 
     @Test
@@ -379,10 +379,10 @@ public class VariableLengthFileParserTest {
         assertThat(item.findChild("field2").getType()).isEqualTo("string");
 
         // field3: number in content2 and content3
-        assertThat(item.findChild("field3").getType()).isEqualTo("number");
+        assertThat(item.findChild("field3").getType()).isEqualTo("string");
 
         // field4: boolean only in content3
-        assertThat(item.findChild("field4").getType()).isEqualTo("boolean");
+        assertThat(item.findChild("field4").getType()).isEqualTo("string");
     }
 
     @Test

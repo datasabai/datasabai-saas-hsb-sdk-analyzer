@@ -139,19 +139,21 @@ public class FixedLengthFileParser implements FileParser {
                 }
             }
 
-            // Infer types for fields without explicit types
+            // Determine types for fields
+            // Priority: 1) Explicit type in descriptor, 2) Infer as "string" (default)
             Map<String, String> fieldTypes = new LinkedHashMap<>();
             for (FixedLengthDescriptor.FieldDefinition field : descriptor.getFields()) {
                 String type;
                 if (field.getType() != null && !field.getType().isBlank()) {
-                    // Use explicit type
+                    // Use explicit type from descriptor if provided
                     type = field.getType();
+                    log.debug("Field '{}' using explicit type from descriptor: {}", field.getName(), type);
                 } else {
-                    // Infer type from values
+                    // Infer type from values (will return "string" by default)
                     type = inferFieldType(fieldValues.get(field.getName()));
+                    log.debug("Field '{}' using inferred type: {}", field.getName(), type);
                 }
                 fieldTypes.put(field.getName(), type);
-                log.debug("Field '{}' type: {}", field.getName(), type);
             }
 
             // Build structure

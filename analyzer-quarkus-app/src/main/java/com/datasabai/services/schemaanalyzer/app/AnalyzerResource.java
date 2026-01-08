@@ -85,6 +85,17 @@ public class AnalyzerResource {
      *
      * POST /api/analyzer/analyze-file
      * Content-Type: multipart/form-data
+     *
+     * Form parameters:
+     * - file: The file to analyze (required)
+     * - schemaName: Name for the generated schema (optional)
+     * - fileType: Type of file (CSV, JSON, FIXED_LENGTH, VARIABLE_LENGTH) (optional - auto-detected if not provided)
+     * - detectArrays: Whether to detect arrays (default: true)
+     * - optimizeForBeanIO: Whether to optimize for BeanIO (default: true)
+     * - descriptorFile: JSON descriptor file for FIXED_LENGTH files (optional)
+     * - fieldDefinitions: Inline JSON field definitions for FIXED_LENGTH files (optional)
+     * - parserOptions: Additional parser options as JSON (optional)
+     *
      * Returns: SchemaGenerationResult
      */
     @POST
@@ -95,7 +106,10 @@ public class AnalyzerResource {
             @RestForm("schemaName") String schemaName,
             @RestForm("fileType") String fileTypeStr,
             @RestForm("detectArrays") @DefaultValue("true") boolean detectArrays,
-            @RestForm("optimizeForBeanIO") @DefaultValue("true") boolean optimizeForBeanIO
+            @RestForm("optimizeForBeanIO") @DefaultValue("true") boolean optimizeForBeanIO,
+            @RestForm("descriptorFile") FileUpload descriptorFile,
+            @RestForm("fieldDefinitions") String fieldDefinitions,
+            @RestForm("parserOptions") String parserOptionsJson
     ) {
         log.info("Analyzing uploaded file: {}", file.fileName());
 
@@ -116,9 +130,36 @@ public class AnalyzerResource {
             String fileContent = null;
 
             // For text-based formats, convert to string
-            if (fileType == FileType.XML || fileType == FileType.CSV ||
-                fileType == FileType.JSON || fileType == FileType.TXT) {
-                fileContent = new String(fileBytes);
+            // All supported file types (CSV, JSON, FIXED_LENGTH, VARIABLE_LENGTH) are text-based
+            fileContent = new String(fileBytes);
+
+            // Build parser options
+            Map<String, String> parserOptions = new HashMap<>();
+
+            // Add descriptor file content if provided
+            if (descriptorFile != null && descriptorFile.uploadedFile() != null) {
+                String descriptorContent = Files.readString(descriptorFile.uploadedFile());
+                parserOptions.put("descriptorFile", descriptorContent);
+                log.debug("Descriptor file provided: {} bytes", descriptorContent.length());
+            }
+
+            // Add inline field definitions if provided
+            if (fieldDefinitions != null && !fieldDefinitions.isBlank()) {
+                parserOptions.put("fieldDefinitions", fieldDefinitions);
+                log.debug("Inline field definitions provided");
+            }
+
+            // Parse additional parser options from JSON if provided
+            if (parserOptionsJson != null && !parserOptionsJson.isBlank()) {
+                try {
+                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                    @SuppressWarnings("unchecked")
+                    Map<String, String> additionalOptions = mapper.readValue(parserOptionsJson, Map.class);
+                    parserOptions.putAll(additionalOptions);
+                    log.debug("Additional parser options provided: {}", additionalOptions.keySet());
+                } catch (Exception e) {
+                    log.warn("Failed to parse parserOptions JSON, ignoring: {}", e.getMessage());
+                }
             }
 
             // Build request
@@ -132,6 +173,11 @@ public class AnalyzerResource {
                 requestBuilder.fileContent(fileContent);
             } else {
                 requestBuilder.fileBytes(fileBytes);
+            }
+
+            // Add parser options if any
+            if (!parserOptions.isEmpty()) {
+                requestBuilder.parserOptions(parserOptions);
             }
 
             FileAnalysisRequest request = requestBuilder.build();

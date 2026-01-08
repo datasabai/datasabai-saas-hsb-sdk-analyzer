@@ -237,24 +237,24 @@ public class JsonFileParser implements FileParser {
 
     /**
      * Converts a JSON number node to StructureElement.
+     * All types are inferred as "string" since we cannot reliably determine semantic types from raw data.
      */
     private StructureElement convertNumberNode(String name, JsonNode numberNode) {
-        // Check if it's an integer or decimal
-        String type = numberNode.isIntegralNumber() ? "integer" : "number";
-
+        // Return "string" type for all numbers as type inference cannot reliably determine semantic types
         return StructureElement.builder()
                 .name(name)
-                .type(type)
+                .type("string")
                 .build();
     }
 
     /**
      * Converts a JSON boolean node to StructureElement.
+     * All types are inferred as "string" since we cannot reliably determine semantic types from raw data.
      */
     private StructureElement convertBooleanNode(String name, JsonNode booleanNode) {
         return StructureElement.builder()
                 .name(name)
-                .type("boolean")
+                .type("string")
                 .build();
     }
 
