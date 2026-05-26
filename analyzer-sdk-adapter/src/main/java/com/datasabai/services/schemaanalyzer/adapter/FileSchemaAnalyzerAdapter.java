@@ -204,7 +204,7 @@ public class FileSchemaAnalyzerAdapter implements SdkModule<FileAnalysisRequest,
         schema.put("metadata.representation", "Schema metadata: physical format (e.g., FLAT, JSON, CSV)");
         schema.put("metadata.specification", "Schema metadata: standard family (auto-filled from file type if not set)");
         schema.put("metadata.specVersion", "Schema metadata: specification version");
-        schema.put("metadata.documentCode", "Schema metadata: document/message type code");
+        schema.put("metadata.code", "Schema metadata: document/message type code");
         schema.put("metadata.documentType", "Schema metadata: business classification");
         schema.put("metadata.modelName", "Schema metadata: model name (auto-filled from schema name if not set)");
         schema.put("metadata.category", "Schema metadata: category (standard, projection, customer)");
@@ -261,7 +261,7 @@ public class FileSchemaAnalyzerAdapter implements SdkModule<FileAnalysisRequest,
                     Map.entry("metadata.representation", (b, v) -> b.representation(v)),
                     Map.entry("metadata.specification", (b, v) -> b.specification(v)),
                     Map.entry("metadata.specVersion", (b, v) -> b.specVersion(v)),
-                    Map.entry("metadata.documentCode", (b, v) -> b.documentCode(v)),
+                    Map.entry("metadata.code", (b, v) -> b.code(v)),
                     Map.entry("metadata.documentType", (b, v) -> b.documentType(v)),
                     Map.entry("metadata.modelName", (b, v) -> b.modelName(v)),
                     Map.entry("metadata.category", (b, v) -> b.category(v)),

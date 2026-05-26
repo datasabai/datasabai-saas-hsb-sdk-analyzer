@@ -114,7 +114,7 @@ public class AnalyzerResource {
             @RestForm("representation") String metaRepresentation,
             @RestForm("specification") String metaSpecification,
             @RestForm("specVersion") String metaSpecVersion,
-            @RestForm("documentCode") String metaDocumentCode,
+            @RestForm("code") String metaCode,
             @RestForm("documentType") String metaDocumentType,
             @RestForm("modelName") String metaModelName,
             @RestForm("category") String metaCategory,
@@ -193,7 +193,7 @@ public class AnalyzerResource {
             // Build x-schemaMetadata if any metadata parameter is provided
             XSchemaMetadata xMeta = buildXSchemaMetadataFromForm(
                     metadataId, metadataVersion, metaCreatedAt, metaRepresentation,
-                    metaSpecification, metaSpecVersion, metaDocumentCode,
+                    metaSpecification, metaSpecVersion, metaCode,
                     metaDocumentType, metaModelName, metaCategory,
                     metaBaseStandardId, metaProjectionId, metaCustomerName);
             if (xMeta != null) {
@@ -238,13 +238,13 @@ public class AnalyzerResource {
 
     private XSchemaMetadata buildXSchemaMetadataFromForm(
             String id, String version, String createdAt, String representation,
-            String specification, String specVersion, String documentCode,
+            String specification, String specVersion, String code,
             String documentType, String modelName, String category,
             String baseStandardId, String projectionId, String customerName) {
 
         boolean hasAny = id != null || version != null || createdAt != null
                 || representation != null || specification != null || specVersion != null
-                || documentCode != null || documentType != null || modelName != null
+                || code != null || documentType != null || modelName != null
                 || category != null || baseStandardId != null || projectionId != null
                 || customerName != null;
 
@@ -259,7 +259,7 @@ public class AnalyzerResource {
                 .representation(representation)
                 .specification(specification)
                 .specVersion(specVersion)
-                .documentCode(documentCode)
+                .code(code)
                 .documentType(documentType)
                 .modelName(modelName)
                 .category(category)
