@@ -10,6 +10,7 @@ import com.datasabai.services.schemaanalyzer.core.model.FileAnalysisRequest;
 import com.datasabai.services.schemaanalyzer.core.model.SchemaGenerationResult;
 import com.datasabai.services.schemaanalyzer.core.model.XSchemaMetadata;
 
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -208,7 +209,7 @@ public class FileSchemaAnalyzerAdapter implements SdkModule<FileAnalysisRequest,
         schema.put("metadata.modelName", "Schema metadata: model name (auto-filled from schema name if not set)");
         schema.put("metadata.category", "Schema metadata: category (standard, projection, customer)");
         schema.put("metadata.baseStandardId", "Schema metadata: base standard ID (for projection/customer)");
-        schema.put("metadata.customerId", "Schema metadata: customer ID (for customer category)");
+        schema.put("metadata.projectionId", "Schema metadata: projection ID (for projection category)");
         schema.put("metadata.customerName", "Schema metadata: customer name (for customer category)");
 
         return schema;
@@ -265,7 +266,7 @@ public class FileSchemaAnalyzerAdapter implements SdkModule<FileAnalysisRequest,
                     Map.entry("metadata.modelName", (b, v) -> b.modelName(v)),
                     Map.entry("metadata.category", (b, v) -> b.category(v)),
                     Map.entry("metadata.baseStandardId", (b, v) -> b.baseStandardId(v)),
-                    Map.entry("metadata.customerId", (b, v) -> b.customerId(v)),
+                    Map.entry("metadata.projectionId", (b, v) -> b.projectionId(v)),
                     Map.entry("metadata.customerName", (b, v) -> b.customerName(v))
             );
 
@@ -280,6 +281,22 @@ public class FileSchemaAnalyzerAdapter implements SdkModule<FileAnalysisRequest,
             if (hasAny) {
                 request.setXSchemaMetadata(metaBuilder.build());
             }
+        }
+
+        // Auto-derive organisationCode from workspacePath when the caller did
+        // not provide one. workspacePath is the canonical source exposed by
+        // the SDK runtime; this module owns the rule for turning it into an
+        // organisationCode and embedding it in x-schemaMetadata.
+        XSchemaMetadata meta = request.getXSchemaMetadata();
+        if (meta != null && (meta.getOrganisationCode() == null || meta.getOrganisationCode().isBlank())) {
+            context.getConfig("workspacePath").ifPresent(workspacePath -> {
+                if (workspacePath != null && !workspacePath.isBlank()) {
+                    String code = Paths.get(workspacePath).getFileName().toString();
+                    if (!code.isBlank()) {
+                        meta.setOrganisationCode(code);
+                    }
+                }
+            });
         }
     }
 

@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonPropertyOrder({
         "id",
+        "organisationCode",
         "version",
         "createdAt",
         "representation",
@@ -20,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
         "modelName",
         "category",
         "baseStandardId",
-        "customerId",
+        "projectionId",
         "customerName",
         "aliases",
         "tags",
@@ -29,9 +30,10 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class XSchemaMetadata {
 
-    // --- 13 base fields (all from API) ---
+    // --- 14 base fields (all from API) ---
 
     private String id;
+    private String organisationCode;
     private String version;
     private String createdAt;
     private String representation;
@@ -42,7 +44,7 @@ public class XSchemaMetadata {
     private String modelName;
     private String category;
     private String baseStandardId;
-    private String customerId;
+    private String projectionId;
     private String customerName;
 
     // --- 3 RAG fields (auto-generated) ---
@@ -56,6 +58,7 @@ public class XSchemaMetadata {
 
     private XSchemaMetadata(Builder builder) {
         this.id = builder.id;
+        this.organisationCode = builder.organisationCode;
         this.version = builder.version;
         this.createdAt = builder.createdAt;
         this.representation = builder.representation;
@@ -66,7 +69,7 @@ public class XSchemaMetadata {
         this.modelName = builder.modelName;
         this.category = builder.category;
         this.baseStandardId = builder.baseStandardId;
-        this.customerId = builder.customerId;
+        this.projectionId = builder.projectionId;
         this.customerName = builder.customerName;
     }
 
@@ -137,6 +140,7 @@ public class XSchemaMetadata {
     public Map<String, Object> toMap() {
         Map<String, Object> map = new LinkedHashMap<>();
         if (id != null) map.put("id", id);
+        if (organisationCode != null) map.put("organisationCode", organisationCode);
         if (version != null) map.put("version", version);
         if (createdAt != null) map.put("createdAt", createdAt);
         if (representation != null) map.put("representation", representation);
@@ -147,7 +151,7 @@ public class XSchemaMetadata {
         if (modelName != null) map.put("modelName", modelName);
         if (category != null) map.put("category", category);
         if (baseStandardId != null) map.put("baseStandardId", baseStandardId);
-        if (customerId != null) map.put("customerId", customerId);
+        if (projectionId != null) map.put("projectionId", projectionId);
         if (customerName != null) map.put("customerName", customerName);
         if (aliases != null) map.put("aliases", aliases);
         if (tags != null) map.put("tags", tags);
@@ -159,6 +163,9 @@ public class XSchemaMetadata {
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
+
+    public String getOrganisationCode() { return organisationCode; }
+    public void setOrganisationCode(String organisationCode) { this.organisationCode = organisationCode; }
 
     public String getVersion() { return version; }
     public void setVersion(String version) { this.version = version; }
@@ -190,8 +197,8 @@ public class XSchemaMetadata {
     public String getBaseStandardId() { return baseStandardId; }
     public void setBaseStandardId(String baseStandardId) { this.baseStandardId = baseStandardId; }
 
-    public String getCustomerId() { return customerId; }
-    public void setCustomerId(String customerId) { this.customerId = customerId; }
+    public String getProjectionId() { return projectionId; }
+    public void setProjectionId(String projectionId) { this.projectionId = projectionId; }
 
     public String getCustomerName() { return customerName; }
     public void setCustomerName(String customerName) { this.customerName = customerName; }
@@ -213,6 +220,7 @@ public class XSchemaMetadata {
 
     public static class Builder {
         private String id;
+        private String organisationCode;
         private String version;
         private String createdAt;
         private String representation;
@@ -223,13 +231,14 @@ public class XSchemaMetadata {
         private String modelName;
         private String category;
         private String baseStandardId;
-        private String customerId;
+        private String projectionId;
         private String customerName;
 
         private Builder() {
         }
 
         public Builder id(String id) { this.id = id; return this; }
+        public Builder organisationCode(String organisationCode) { this.organisationCode = organisationCode; return this; }
         public Builder version(String version) { this.version = version; return this; }
         public Builder createdAt(String createdAt) { this.createdAt = createdAt; return this; }
         public Builder representation(String representation) { this.representation = representation; return this; }
@@ -240,7 +249,7 @@ public class XSchemaMetadata {
         public Builder modelName(String modelName) { this.modelName = modelName; return this; }
         public Builder category(String category) { this.category = category; return this; }
         public Builder baseStandardId(String baseStandardId) { this.baseStandardId = baseStandardId; return this; }
-        public Builder customerId(String customerId) { this.customerId = customerId; return this; }
+        public Builder projectionId(String projectionId) { this.projectionId = projectionId; return this; }
         public Builder customerName(String customerName) { this.customerName = customerName; return this; }
 
         public XSchemaMetadata build() {
