@@ -48,7 +48,7 @@ public class CsvOrdersSampleTest {
                 .representation("flat")
                 .specification("csv")
                 .specVersion("v1")
-                .documentCode("ORDERS")
+                .code("ORDERS")
                 .documentType("Ecommerce")
                 .modelName("OrderCSV")
                 .category("standard")

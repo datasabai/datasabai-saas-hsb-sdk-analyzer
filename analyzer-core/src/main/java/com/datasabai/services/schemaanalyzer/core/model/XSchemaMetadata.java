@@ -16,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
         "representation",
         "specification",
         "specVersion",
-        "documentCode",
+        "code",
         "documentType",
         "modelName",
         "category",
@@ -39,7 +39,7 @@ public class XSchemaMetadata {
     private String representation;
     private String specification;
     private String specVersion;
-    private String documentCode;
+    private String code;
     private String documentType;
     private String modelName;
     private String category;
@@ -64,7 +64,7 @@ public class XSchemaMetadata {
         this.representation = builder.representation;
         this.specification = builder.specification;
         this.specVersion = builder.specVersion;
-        this.documentCode = builder.documentCode;
+        this.code = builder.code;
         this.documentType = builder.documentType;
         this.modelName = builder.modelName;
         this.category = builder.category;
@@ -80,8 +80,8 @@ public class XSchemaMetadata {
     public void populateRagFields() {
         if (aliases == null) {
             Map<String, String> a = new LinkedHashMap<>();
-            if (documentCode != null && !documentCode.isBlank()) {
-                a.put("documentCode", documentCode);
+            if (code != null && !code.isBlank()) {
+                a.put("code", code);
             }
             if (modelName != null && !modelName.isBlank()) {
                 a.put("modelName", modelName);
@@ -102,8 +102,8 @@ public class XSchemaMetadata {
             if (representation != null && !representation.isBlank()) {
                 t.add(representation.toLowerCase());
             }
-            if (documentCode != null && !documentCode.isBlank()) {
-                t.add(documentCode.toLowerCase());
+            if (code != null && !code.isBlank()) {
+                t.add(code.toLowerCase());
             }
             if (documentType != null && !documentType.isBlank()) {
                 t.add(documentType.toLowerCase());
@@ -121,8 +121,8 @@ public class XSchemaMetadata {
             if (modelName != null && !modelName.isBlank()) {
                 sb.append(" ").append(modelName);
             }
-            if (documentCode != null && !documentCode.isBlank()) {
-                sb.append(" - ").append(documentCode);
+            if (code != null && !code.isBlank()) {
+                sb.append(" - ").append(code);
             }
             if (documentType != null && !documentType.isBlank()) {
                 sb.append(" (").append(documentType).append(")");
@@ -146,7 +146,7 @@ public class XSchemaMetadata {
         if (representation != null) map.put("representation", representation);
         if (specification != null) map.put("specification", specification);
         if (specVersion != null) map.put("specVersion", specVersion);
-        if (documentCode != null) map.put("documentCode", documentCode);
+        if (code != null) map.put("code", code);
         if (documentType != null) map.put("documentType", documentType);
         if (modelName != null) map.put("modelName", modelName);
         if (category != null) map.put("category", category);
@@ -182,8 +182,8 @@ public class XSchemaMetadata {
     public String getSpecVersion() { return specVersion; }
     public void setSpecVersion(String specVersion) { this.specVersion = specVersion; }
 
-    public String getDocumentCode() { return documentCode; }
-    public void setDocumentCode(String documentCode) { this.documentCode = documentCode; }
+    public String getCode() { return code; }
+    public void setCode(String code) { this.code = code; }
 
     public String getDocumentType() { return documentType; }
     public void setDocumentType(String documentType) { this.documentType = documentType; }
@@ -226,7 +226,7 @@ public class XSchemaMetadata {
         private String representation;
         private String specification;
         private String specVersion;
-        private String documentCode;
+        private String code;
         private String documentType;
         private String modelName;
         private String category;
@@ -244,7 +244,7 @@ public class XSchemaMetadata {
         public Builder representation(String representation) { this.representation = representation; return this; }
         public Builder specification(String specification) { this.specification = specification; return this; }
         public Builder specVersion(String specVersion) { this.specVersion = specVersion; return this; }
-        public Builder documentCode(String documentCode) { this.documentCode = documentCode; return this; }
+        public Builder code(String code) { this.code = code; return this; }
         public Builder documentType(String documentType) { this.documentType = documentType; return this; }
         public Builder modelName(String modelName) { this.modelName = modelName; return this; }
         public Builder category(String category) { this.category = category; return this; }
