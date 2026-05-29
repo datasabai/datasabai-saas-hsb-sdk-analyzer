@@ -147,7 +147,7 @@ public class XSchemaMetadata {
         if (specification != null) map.put("specification", specification);
         if (specVersion != null) map.put("specVersion", specVersion);
         if (code != null) map.put("code", code);
-        if (documentType != null) map.put("documentType", documentType);
+        map.put("documentType", documentType != null ? documentType : "");
         if (modelName != null) map.put("modelName", modelName);
         if (category != null) map.put("category", category);
         if (baseStandardId != null) map.put("baseStandardId", baseStandardId);
