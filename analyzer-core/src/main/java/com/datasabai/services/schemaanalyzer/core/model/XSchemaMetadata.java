@@ -140,6 +140,9 @@ public class XSchemaMetadata {
     public Map<String, Object> toMap() {
         Map<String, Object> map = new LinkedHashMap<>();
         if (id != null) map.put("id", id);
+        // projectionId sits right after id: value for projection, empty for standard/customer
+        map.put("projectionId",
+                "projection".equalsIgnoreCase(category) && projectionId != null ? projectionId : "");
         if (organisationCode != null) map.put("organisationCode", organisationCode);
         if (version != null) map.put("version", version);
         if (createdAt != null) map.put("createdAt", createdAt);
