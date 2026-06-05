@@ -342,6 +342,13 @@ public class FileSchemaAnalyzer {
             if (meta.getModelName() == null) {
                 meta.setModelName(request.getSchemaName());
             }
+            // projectionId is required when category=projection (mirrors xml-parser rule)
+            if ("projection".equalsIgnoreCase(meta.getCategory())
+                    && (meta.getProjectionId() == null || meta.getProjectionId().isBlank())) {
+                throw new AnalyzerException(
+                        "VALIDATION_ERROR",
+                        "x-schemaMetadata.projectionId is required when category is 'projection'");
+            }
             schema = SchemaMetadataInjector.inject(schema, meta);
         }
 
